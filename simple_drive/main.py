@@ -101,15 +101,6 @@ class Drive:
 
         return new_file
 
-    def get_file_info(self, file_id, fields='*'):
-        '''
-        Get a file|folder info
-        :param file_id: File|folder ID
-        :param fields: * is all fields
-        :return: File|folder info
-        '''
-        return self.service.files().get(fileId=file_id, fields=fields).execute()
-
     def copy(self, file_id, name_prefix='Copy of ', name_suffix='', dest_folder_id=None):
         '''
         Copy a file. Not support folder yet.
@@ -144,6 +135,15 @@ class Drive:
         result = self.service.files().update(fileId=file_id, body=body, fields=self.default_file_fields).execute()
         self.print_if_vebose(f"{Fore.BLUE}Renamed file|folder {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{name}")
         return result
+
+    def get_file_info(self, file_id, fields='*'):
+        '''
+        Get a file|folder info
+        :param file_id: File|folder ID
+        :param fields: * is all fields
+        :return: File|folder info
+        '''
+        return self.service.files().get(fileId=file_id, fields=fields).execute()
 
     # Account infomation
     def list_files(self, title_contains=None, owner_email=None, folder_id=None, custom_filter=None):
