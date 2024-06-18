@@ -99,12 +99,13 @@ drive.add_permission(file_id, email, role)
 ```
 
 #### Remove a permission from a file or folder
+Please provide either `email` or `permission_id`.
 ```python
 drive.remove_permission(file_id, email=None, permission_id=None)
 ```
 
 #### Transfer ownership of a file or folder to an email
-Support for emails in organization.
+Support emails in organization.
 ```python
 drive.transfer_ownership(file_id, email)
 ```
