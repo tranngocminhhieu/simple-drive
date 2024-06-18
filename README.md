@@ -109,3 +109,6 @@ Support emails in organization.
 ```python
 drive.transfer_ownership(file_id, email)
 ```
+
+## Conclusion
+I welcome your contributions!
