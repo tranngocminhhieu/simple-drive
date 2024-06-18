@@ -215,7 +215,7 @@ class Drive:
             pass
         elif email:
             permissions = self.get_permission_info(file_id=file_id)
-            permission = [p['id'] for p in permissions if p['emailAddress'] == email]
+            permission = [p['id'] for p in permissions if p['emailAddress'] == str(email).lower()]
             if not permission:
                 raise ValueError(f"{email} does not exist in permission list")
             else:

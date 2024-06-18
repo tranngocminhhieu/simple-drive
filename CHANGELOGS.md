@@ -1,3 +1,6 @@
+# 1.0.1
+`Drive().remove_permission` make sure email is lower case.
+
 # 1.0.0
 Drive functions:
 - create
