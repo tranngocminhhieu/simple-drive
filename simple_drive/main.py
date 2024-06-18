@@ -181,6 +181,14 @@ class Drive:
         return quota
 
     # Permission
+    def get_permission_info(self, file_id):
+        '''
+        Get permission of a file|folder
+        :param file_id: File|folder ID
+        :return: Permission info
+        '''
+        return self.service.permissions().list(fileId=file_id, fields='permissions').execute()['permissions']
+
     def add_permission(self, file_id, email, role):
         '''
         Add permission to a file|folder
@@ -195,13 +203,6 @@ class Drive:
             f"{Fore.GREEN}Added {Fore.RESET}{role} {Fore.GREEN}permission for {Fore.RESET}{email} {Fore.GREEN}to {Fore.RESET}{file_id}")
         return result
 
-    def get_permission_info(self, file_id):
-        '''
-        Get permission of a file|folder
-        :param file_id: File|folder ID
-        :return: Permission info
-        '''
-        return self.service.permissions().list(fileId=file_id, fields='permissions').execute()['permissions']
 
     def remove_permission(self, file_id, email=None, permission_id=None):
         '''
