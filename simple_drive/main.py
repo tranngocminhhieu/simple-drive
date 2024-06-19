@@ -116,7 +116,7 @@ class Drive:
         return new_file
 
 
-    def copy(self, file_id, name_prefix='Copy of ', name_suffix='', dest_folder_id=None):
+    def copy(self, file_id, name_prefix='Copy of ', name_suffix=None, dest_folder_id=None):
         '''
         Copy a file. Not support folder yet.
         :param file_id: File ID
@@ -127,7 +127,7 @@ class Drive:
         '''
         current_file = self.service.files().get(fileId=file_id, fields=self.default_file_fields).execute()
         current_name = current_file['name']
-        new_name = f'{name_prefix}{current_name}{name_suffix}'
+        new_name = f"{name_prefix if name_prefix else ''}{current_name}{name_suffix if name_suffix else ''}"
 
         body = {'name': new_name}
         if dest_folder_id:
