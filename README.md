@@ -1,4 +1,4 @@
-# simple_drive
+# simple-drive
 [![Downloads](https://img.shields.io/pypi/dm/simple-drive)](https://pypi.org/project/simple-drive)
 [![Pypi](https://img.shields.io/pypi/v/simple-drive)](https://pypi.org/project/simple-drive)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](https://github.com/tranngocminhhieu/simple-drive/issues)
@@ -39,7 +39,7 @@ auth = Auth.local_web_server(client_secrets_file=YOUR_CLIENT_SECRETS_FILE)
 
 ### Use Drive API
 ```python
-drive = Drive(auth_info=auth)
+drive = Drive(auth=auth, verbose=True)
 ```
 
 #### Create a file or folder
@@ -93,7 +93,7 @@ drive.storage_quota()
 
 #### Get permission of a file or folder
 ```python
-drive.get_permission_info(file_id)
+drive.list_permissions(file_id)
 ```
 
 #### Add permission to a file or folder

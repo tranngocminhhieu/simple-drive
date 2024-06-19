@@ -7,7 +7,7 @@ from pydrive2.drive import GoogleDrive
 
 
 class Drive:
-    def __init__(self, auth_info, verbose=True):
+    def __init__(self, auth, verbose=True):
         '''
         Use Google Drive API in the simplest way
         :param auth_info: Use Auth class to authenticate with Google Drive
@@ -16,18 +16,20 @@ class Drive:
         self.verbose = verbose
 
         # For Upload and List files
-        self.drive = GoogleDrive(auth_info)
+        self.drive = GoogleDrive(auth)
 
         # For other features
-        self.service = build('drive', 'v3', credentials=auth_info.credentials)
+        self.service = build('drive', 'v3', credentials=auth.credentials)
 
         # Default info result of service.files()
         self.default_file_fields = 'id, name, mimeType, parents, webViewLink, owners'
 
+
     # Support
-    def print_if_vebose(self, *args):
+    def print_if_verbose(self, *args):
         if self.verbose:
             print(*args)
+
 
     # File interaction
     def create(self, name, mime_type, dest_folder_id=None):
@@ -47,9 +49,9 @@ class Drive:
 
         file = self.service.files().create(body=body, fields=self.default_file_fields).execute()
 
-        self.print_if_vebose(f"{Fore.GREEN}Created {Fore.RESET}{name}")
-
+        self.print_if_verbose(f"{Fore.GREEN}Created a {mime_type} as {Fore.RESET}{name}")
         return file
+
 
     def delete(self, file_id):
         '''
@@ -57,7 +59,8 @@ class Drive:
         :param file_id: File|folder ID
         '''
         self.service.files().delete(fileId=file_id).execute()
-        self.print_if_vebose(f"{Fore.RED}Deleted file|folder {Fore.RESET}{file_id}")
+        self.print_if_verbose(f"{Fore.RED}Deleted {Fore.RESET}{file_id}")
+
 
     def move(self, file_id, dest_folder_id):
         '''
@@ -73,9 +76,9 @@ class Drive:
                                              removeParents=remove_parents,
                                              fields=self.default_file_fields).execute()
 
-        self.print_if_vebose(f"{Fore.BLUE}Moved file|folder {Fore.RESET}{file_id}{Fore.BLUE} to folder {Fore.RESET}{dest_folder_id}")
-
+        self.print_if_verbose(f"{Fore.BLUE}Moved {Fore.RESET}{file_id}{Fore.BLUE} to folder {Fore.RESET}{dest_folder_id}")
         return result
+
 
     def upload(self, file, dest_folder_id=None, rename=None):
         '''
@@ -97,9 +100,10 @@ class Drive:
         new_file.SetContentFile(file)
         new_file.Upload()
 
-        self.print_if_vebose(f"{Fore.GREEN}Uploaded file {Fore.RESET}{title}{f'{Fore.GREEN} to folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
+        self.print_if_verbose(f"{Fore.GREEN}Uploaded {Fore.RESET}{title}{f'{Fore.GREEN} to folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
 
         return new_file
+
 
     def copy(self, file_id, name_prefix='Copy of ', name_suffix='', dest_folder_id=None):
         '''
@@ -120,9 +124,9 @@ class Drive:
 
         new_file = self.service.files().copy(fileId=file_id, body=body, fields=self.default_file_fields).execute()
 
-        self.print_if_vebose(f"{Fore.GREEN}Copied {Fore.RESET}{current_name}{Fore.GREEN} to {Fore.RESET}{new_name}")
-
+        self.print_if_verbose(f"{Fore.GREEN}Copied {Fore.RESET}{current_name}{Fore.GREEN} to {Fore.RESET}{new_name}{f'{Fore.GREEN}in folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
         return new_file
+
 
     def rename(self, file_id, name):
         '''
@@ -133,8 +137,9 @@ class Drive:
         '''
         body = {'name': name}
         result = self.service.files().update(fileId=file_id, body=body, fields=self.default_file_fields).execute()
-        self.print_if_vebose(f"{Fore.BLUE}Renamed file|folder {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{name}")
+        self.print_if_verbose(f"{Fore.BLUE}Renamed {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{name}")
         return result
+
 
     def get_file_info(self, file_id, fields='*'):
         '''
@@ -144,6 +149,7 @@ class Drive:
         :return: File|folder info
         '''
         return self.service.files().get(fileId=file_id, fields=fields).execute()
+
 
     # Account infomation
     def list_files(self, title_contains=None, owner_email=None, folder_id=None, custom_filter=None):
@@ -171,6 +177,7 @@ class Drive:
 
         return files
 
+
     def storage_quota(self):
         '''
         Get the account storage quota
@@ -180,14 +187,16 @@ class Drive:
         quota = about.get("storageQuota", {})
         return quota
 
+
     # Permission
-    def get_permission_info(self, file_id):
+    def list_permissions(self, file_id):
         '''
-        Get permission of a file|folder
+        Get a list of permissions of a file|folder
         :param file_id: File|folder ID
         :return: Permission info
         '''
         return self.service.permissions().list(fileId=file_id, fields='permissions').execute()['permissions']
+
 
     def add_permission(self, file_id, email, role):
         '''
@@ -199,8 +208,7 @@ class Drive:
         '''
         body = {'type': 'user', 'role': role, 'emailAddress': email}
         result = self.service.permissions().create(fileId=file_id, body=body, fields='*').execute()
-        self.print_if_vebose(
-            f"{Fore.GREEN}Added {Fore.RESET}{role} {Fore.GREEN}permission for {Fore.RESET}{email} {Fore.GREEN}to {Fore.RESET}{file_id}")
+        self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role} {Fore.GREEN}permission for {Fore.RESET}{email} {Fore.GREEN}to {Fore.RESET}{file_id}")
         return result
 
 
@@ -214,7 +222,7 @@ class Drive:
         if permission_id:
             pass
         elif email:
-            permissions = self.get_permission_info(file_id=file_id)
+            permissions = self.list_permissions(file_id=file_id)
             permission = [p['id'] for p in permissions if p['emailAddress'] == str(email).lower()]
             if not permission:
                 raise ValueError(f"{email} does not exist in permission list")
@@ -225,7 +233,8 @@ class Drive:
 
         self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
 
-        self.print_if_vebose(f"{Fore.RED}Removed permission of {Fore.RESET}{email or permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
+        self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{email or permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
+
 
     def transfer_ownership(self, file_id, email):
         '''
@@ -235,7 +244,7 @@ class Drive:
         :return: Ownership info
         '''
         body = {'type': 'user', 'role': 'owner', 'emailAddress': email}
-        result = self.service.permissions().create(fileId=file_id, body=body, transferOwnership=True,
-                                                   fields='*').execute()
-        self.print_if_vebose(f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
+        result = self.service.permissions().create(fileId=file_id, body=body, transferOwnership=True, fields='*').execute()
+
+        self.print_if_verbose(f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
         return result
