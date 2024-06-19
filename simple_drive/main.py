@@ -187,7 +187,7 @@ class Drive:
         return files
 
 
-    def storage_quota(self):
+    def get_storage_quota(self):
         '''
         Get the account storage quota
         :return: Storage quota info

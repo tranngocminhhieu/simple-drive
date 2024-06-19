@@ -88,7 +88,7 @@ drive.list_files(title_contains=None, owner_email=None, folder_id=None, custom_f
 
 #### Get the account storage quota
 ```python
-drive.storage_quota()
+drive.get_storage_quota()
 ```
 
 #### Get permission of a file or folder
