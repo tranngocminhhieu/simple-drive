@@ -58,7 +58,7 @@ class Drive:
 
         file = self.service.files().create(body=body, fields=self.default_file_fields).execute()
 
-        self.print_if_verbose(f"{Fore.GREEN}Created {'an' if mime_type_name[0] in 'ueoai' else 'a'} {mime_type_name} as {Fore.RESET}{name}{f'{Fore.GREEN} in folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
+        self.print_if_verbose(f"{Fore.GREEN}Created {'an' if mime_type_name[0].lower() in 'ueoai' else 'a'} {mime_type_name} as {Fore.RESET}{name}{f'{Fore.GREEN} in folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
 
         return file
 
