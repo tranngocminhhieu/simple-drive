@@ -86,7 +86,7 @@ class Drive:
                                              removeParents=remove_parents,
                                              fields=self.default_file_fields).execute()
 
-        self.print_if_verbose(f"{Fore.BLUE}Moved {Fore.RESET}{file_id}{Fore.BLUE} to folder {Fore.RESET}{dest_folder_id}")
+        self.print_if_verbose(f"{Fore.BLUE}Moved {Fore.RESET}{result.get('name', file_id)}{Fore.BLUE} to folder {Fore.RESET}{dest_folder_id}")
 
         return result
 

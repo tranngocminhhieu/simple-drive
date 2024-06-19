@@ -13,8 +13,8 @@ Drive functions:
 - copy
 - rename
 - list_files
-- storage_quota
-- get_permission_info
+- get_storage_quota
+- list_permissions
 - add_permission
 - remove_permission
 - transfer_ownership
