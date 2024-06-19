@@ -67,7 +67,7 @@ drive.upload(file, dest_folder_id=None, rename=None)
 #### Copy a file
 Not support folder yet.
 ```python
-drive.copy(file_id, name_prefix='Copy of ', name_suffix='', dest_folder_id=None)
+drive.copy(file_id, name_prefix='Copy of ', name_suffix=None, dest_folder_id=None)
 ```
 
 #### Rename a file or folder
