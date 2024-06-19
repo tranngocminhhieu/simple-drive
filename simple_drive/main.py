@@ -17,7 +17,7 @@ class Drive:
         self.verbose = verbose
 
         # For Upload and List files
-        self.drive = GoogleDrive(auth)
+        self.google_drive = GoogleDrive(auth)
 
         # For other features
         self.service = build('drive', 'v3', credentials=auth.credentials)
@@ -105,7 +105,7 @@ class Drive:
             'parents': parents
         }
 
-        new_file = self.drive.CreateFile(metadata=metadata)
+        new_file = self.google_drive.CreateFile(metadata=metadata)
         new_file.SetContentFile(file)
         new_file.Upload()
 
@@ -182,7 +182,7 @@ class Drive:
 
         param = {'q': ' and '.join(filters)} if len(filters) else None
 
-        files = self.drive.ListFile(param=param).GetList()
+        files = self.google_drive.ListFile(param=param).GetList()
 
         return files
 
