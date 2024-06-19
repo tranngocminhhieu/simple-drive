@@ -1,5 +1,7 @@
 # 1.0.1
-`Drive().remove_permission` make sure email is lower case.
+- `Drive().remove_permission` make sure email is lower case.
+- Clean code.
+- Human readable for `storage_quota`
 
 # 1.0.0
 Drive functions:

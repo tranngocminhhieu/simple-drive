@@ -1,10 +1,12 @@
-class Roles:
+from enum import Enum
+
+class Roles(Enum):
     VIEWER = 'reader'
     EDITOR = 'writer'
     COMMENTER = 'commenter'
 
 
-class MimeTypes:
+class MimeTypes(Enum):
     # https://developers.google.com/drive/api/guides/mime-types
     AUDIO = 'application/vnd.google-apps.audio'
     DOCS = 'application/vnd.google-apps.document'

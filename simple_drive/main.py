@@ -1,5 +1,6 @@
 import os
 import os.path
+from enum import Enum
 
 from colorama import Fore
 from googleapiclient.discovery import build
@@ -40,16 +41,24 @@ class Drive:
         :param dest_folder_id: Destination folder
         :return: File|folder info
         '''
+
+        if isinstance(mime_type, Enum):
+            mime_type_value = mime_type.value
+            mime_type_name = mime_type.name.capitalize()
+        else:
+            mime_type_value = mime_type.lower()
+            mime_type_name = mime_type.capitalize()
+
         body = {
             'name': name,
-            'mimeType': mime_type,
+            'mimeType': mime_type_value,
         }
         if dest_folder_id:
             body['parents'] = [dest_folder_id]
 
         file = self.service.files().create(body=body, fields=self.default_file_fields).execute()
 
-        self.print_if_verbose(f"{Fore.GREEN}Created a {mime_type} as {Fore.RESET}{name}")
+        self.print_if_verbose(f"{Fore.GREEN}Created {mime_type_name} as {Fore.RESET}{name}")
         return file
 
 
@@ -185,6 +194,19 @@ class Drive:
         '''
         about = self.service.about().get(fields="*").execute()
         quota = about.get("storageQuota", {})
+        try:
+            limit = round(int(quota['limit']) / 1024 / 1024 / 1024, 2)
+            usage = round(int(quota['usage']) / 1024 / 1024 / 1024, 2)
+            usage_percent = round(usage / limit * 100, 2)
+            if usage_percent < 30:
+                color = Fore.GREEN
+            elif usage_percent < 70:
+                color = Fore.YELLOW
+            else:
+                color = Fore.RED
+            self.print_if_verbose(f"{color}{usage:0,.2f} GB{Fore.RESET} / {limit:0,.2f} GB (usage {usage_percent}%)")
+        except:
+            pass
         return quota
 
 
@@ -206,9 +228,17 @@ class Drive:
         :param role: Use constants.Roles or visit https://developers.google.com/drive/api/guides/ref-roles
         :return: Permission info
         '''
-        body = {'type': 'user', 'role': role, 'emailAddress': email}
+
+        if isinstance(role, Enum):
+            role_value = role.value
+            role_name = role.name.capitalize()
+        else:
+            role_value = role.lower()
+            role_name = role.capitalize()
+
+        body = {'type': 'user', 'role': role_value, 'emailAddress': email}
         result = self.service.permissions().create(fileId=file_id, body=body, fields='*').execute()
-        self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role} {Fore.GREEN}permission for {Fore.RESET}{email} {Fore.GREEN}to {Fore.RESET}{file_id}")
+        self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{email} {Fore.GREEN}to {Fore.RESET}{file_id}")
         return result
 
 
