@@ -1,3 +1,6 @@
+# 1.0.2
+- Improve micro things
+
 # 1.0.1
 - `Drive().remove_permission` make sure email is lower case.
 - Clean code.
