@@ -59,6 +59,7 @@ class Drive:
         file = self.service.files().create(body=body, fields=self.default_file_fields).execute()
 
         self.print_if_verbose(f"{Fore.GREEN}Created {'an' if mime_type_name[0] in 'ueoai' else 'a'} {mime_type_name} as {Fore.RESET}{name}{f'{Fore.GREEN} in folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
+
         return file
 
 
@@ -86,6 +87,7 @@ class Drive:
                                              fields=self.default_file_fields).execute()
 
         self.print_if_verbose(f"{Fore.BLUE}Moved {Fore.RESET}{file_id}{Fore.BLUE} to folder {Fore.RESET}{dest_folder_id}")
+
         return result
 
 
@@ -134,6 +136,7 @@ class Drive:
         new_file = self.service.files().copy(fileId=file_id, body=body, fields=self.default_file_fields).execute()
 
         self.print_if_verbose(f"{Fore.GREEN}Copied {Fore.RESET}{current_name}{Fore.GREEN} to {Fore.RESET}{new_name}{f'{Fore.GREEN}in folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
+
         return new_file
 
 
@@ -192,8 +195,7 @@ class Drive:
         Get the account storage quota
         :return: Storage quota info
         '''
-        about = self.service.about().get(fields="*").execute()
-        quota = about.get("storageQuota", {})
+        quota = self.service.about().get(fields="storageQuota").execute()['storageQuota']
         try:
             limit = round(int(quota['limit']) / 1024 / 1024 / 1024, 2)
             usage = round(int(quota['usage']) / 1024 / 1024 / 1024, 2)
@@ -207,6 +209,7 @@ class Drive:
             self.print_if_verbose(f"{color}{usage:0,.2f} GB{Fore.RESET} / {limit:0,.2f} GB (usage {usage_percent}%)")
         except:
             pass
+
         return quota
 
 
@@ -238,7 +241,9 @@ class Drive:
 
         body = {'type': 'user', 'role': role_value, 'emailAddress': email}
         result = self.service.permissions().create(fileId=file_id, body=body, fields='*').execute()
+
         self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{email} {Fore.GREEN}to {Fore.RESET}{file_id}")
+
         return result
 
 
@@ -277,4 +282,5 @@ class Drive:
         result = self.service.permissions().create(fileId=file_id, body=body, transferOwnership=True, fields='*').execute()
 
         self.print_if_verbose(f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
+
         return result
