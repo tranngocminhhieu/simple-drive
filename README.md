@@ -25,6 +25,7 @@ from simple_drive import Drive, Auth, MimeTypes, Roles
 
 ### Create auth info
 #### From a service account
+Read more: [How to create a Service Account](https://lucidgen.com/en/create-service-account-and-enable-google-cloud-api/)
 ```python
 # Way 1
 auth = Auth.from_service_account_file(file=YOUR_SERVICE_ACCOUNT_FILE)
