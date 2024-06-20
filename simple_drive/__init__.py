@@ -1,3 +1,3 @@
-from .main import Drive
+from .drive import Drive
 from .auth import Auth
 from .constants import MimeTypes, Roles
