@@ -436,6 +436,56 @@ class Drive:
         return quota
 
 
+    def empty_trash(self):
+        '''
+        Empty the trash
+        '''
+        self.service.files().emptyTrash().execute()
+        self.print_if_verbose(f"{Fore.YELLOW}Already empty trash{Fore.RESET}")
+
+
+    def trash(self, file_id, restore=False):
+        '''
+        Trash a file or restore a file from trash
+        :param file_id: File|Folder ID
+        :param restore: True to restore, False to move to trash
+        '''
+        body = {'trashed': not restore}
+        result = self.service.files().update(fileId=file_id, body=body, fields=self.default_file_fields).execute()
+        if restore:
+            self.print_if_verbose(f"{Fore.GREEN}Restored {Fore.RESET}{file_id}{Fore.GREEN} from trash{Fore.RESET}")
+        else:
+            self.print_if_verbose(f"{Fore.YELLOW}Moved {Fore.RESET}{file_id}{Fore.YELLOW} to trash{Fore.RESET}")
+        return result
+
+
+    def create_shortcut(self, file_id, shortcut_name=None, dest_folder_id=None):
+        '''
+        Create a shortcut
+        :param file_id: File ID
+        :param shortcut_name: Shortcut name
+        :param dest_folder_id: Destination folder
+        :return: Shortcut info
+        '''
+        if not shortcut_name:
+            shortcut_name = self.get_file_info(file_id=file_id).get('name')
+
+        shortcut_metadata = {
+            'Name': shortcut_name,
+            'mimeType': 'application/vnd.google-apps.shortcut',
+            'shortcutDetails': {
+                'targetId': file_id
+            }
+        }
+
+        if dest_folder_id:
+            shortcut_metadata['parents'] = [dest_folder_id]
+
+        shortcut = self.service.files().create(body=shortcut_metadata, fields='id,shortcutDetails').execute()
+
+        self.print_if_verbose(f"{Fore.GREEN}Created shortcut {Fore.RESET}{shortcut_name}")
+        return shortcut
+
     # Permission
     def list_permissions(self, file_id):
         '''
@@ -446,14 +496,41 @@ class Drive:
         return self.service.permissions().list(fileId=file_id, fields='permissions').execute()['permissions']
 
 
-    def add_permission(self, file_id, email, role):
+    # def _add_permission(self, file_id, email, role):
+    #     '''
+    #     Add permission to a file|folder
+    #     :param file_id: File|folder ID
+    #     :param email: Email address
+    #     :param role: Use constants.Roles or visit https://developers.google.com/drive/api/guides/ref-roles
+    #     :return: Permission info
+    #     '''
+    #
+    #     if isinstance(role, Enum):
+    #         role_value = role.value
+    #         role_name = role.name.capitalize()
+    #     else:
+    #         role_value = role.lower()
+    #         role_name = role.capitalize()
+    #
+    #     body = {'type': 'user', 'role': role_value, 'emailAddress': email}
+    #     result = self.service.permissions().create(fileId=file_id, body=body, fields='*').execute()
+    #
+    #     self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{email} {Fore.GREEN}to {Fore.RESET}{file_id}")
+    #
+    #     return result
+
+    def add_permission(self, file_id, role, email=None, domain=None):
         '''
         Add permission to a file|folder
         :param file_id: File|folder ID
-        :param email: Email address
         :param role: Use constants.Roles or visit https://developers.google.com/drive/api/guides/ref-roles
+        :param email: Email address
+        :param domain: Domain, e.g. google.com
         :return: Permission info
         '''
+
+        if not email and not domain:
+            raise ValueError('Please provide email address or domain or both')
 
         if isinstance(role, Enum):
             role_value = role.value
@@ -462,36 +539,106 @@ class Drive:
             role_value = role.lower()
             role_name = role.capitalize()
 
-        body = {'type': 'user', 'role': role_value, 'emailAddress': email}
-        result = self.service.permissions().create(fileId=file_id, body=body, fields='*').execute()
+        # https://developers.google.com/drive/api/guides/manage-sharing
+        try:
+            # create drive api client
+            results = []
 
-        self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{email} {Fore.GREEN}to {Fore.RESET}{file_id}")
+            def callback(request_id, response, exception):
+                if exception:
+                    # Handle error
+                    print(exception)
+                else:
+                    results.append(response)
 
-        return result
+
+            batch = self.service.new_batch_http_request(callback=callback)
+
+            if email:
+                user_permission = {
+                    "type": "user",
+                    "role": role_value,
+                    "emailAddress": email,
+                }
+                batch.add(
+                    self.service.permissions().create(
+                        fileId=file_id,
+                        body=user_permission,
+                        fields="*",
+                    )
+                )
+
+            if domain:
+                domain_permission = {
+                    "type": "domain",
+                    "role": role_value,
+                    "domain": domain,
+                }
+
+                batch.add(
+                    self.service.permissions().create(
+                        fileId=file_id,
+                        body=domain_permission,
+                        fields="*",
+                    )
+                )
+
+            batch.execute()
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            ids = None
+
+        who = []
+        if email:
+            who.append(email)
+        if domain:
+            who.append(domain)
+
+        self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{' and '.join(who)} {Fore.GREEN}to {Fore.RESET}{file_id}")
+
+        return results
 
 
-    def remove_permission(self, file_id, email=None, permission_id=None):
+    def remove_permission(self, file_id, permission_id=None, email=None, domain=None):
         '''
         Remove a permission from a file|folder
         :param file_id: File|folder ID
         :param email: Email address
         :param permission_id: Permission ID
         '''
+        if not permission_id and not email and not domain:
+            raise ValueError(f"Please provide permission_id or email or domain or all")
+
+        who = []
+
         if permission_id:
-            pass
-        elif email:
+            self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
+            who.append(permission_id)
+        if email or domain:
             permissions = self.list_permissions(file_id=file_id)
-            permission = [p['id'] for p in permissions if p['emailAddress'] == str(email).lower()]
-            if not permission:
-                raise ValueError(f"{email} does not exist in permission list")
-            else:
-                permission_id = permission[0]
-        else:
-            raise ValueError(f"Please provide either email or permission_id")
 
-        self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
+            if email:
+                email_permission = [p['id'] for p in permissions if p.get('emailAddress') == str(email).lower()]
+                if not email_permission:
+                    self.print_if_verbose(f"{email}{Fore.YELLOW} does not exist in permission list{Fore.RESET}")
+                else:
+                    permission_id = email_permission[0]
+                    self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
 
-        self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{email or permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
+                    who.append(email)
+
+            if domain:
+                domain_permission = [p['id'] for p in permissions if p.get('domain') == str(domain).lower()]
+                if not domain_permission:
+                    self.print_if_verbose(f"{domain}{Fore.YELLOW} does not exist in permission list{Fore.RESET}")
+                else:
+                    permission_id = domain_permission[0]
+                    self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
+
+                    who.append(domain)
+        if who:
+            self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{', '.join(who)} {Fore.RED}from {Fore.RESET}{file_id}")
 
 
     def transfer_ownership(self, file_id, email):
