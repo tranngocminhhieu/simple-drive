@@ -550,7 +550,7 @@ class Drive:
                     print(exception)
                 else:
                     results.append(response)
-
+                    self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{response.get('emailAddress', response.get('domain'))} {Fore.GREEN}to {Fore.RESET}{file_id}")
 
             batch = self.service.new_batch_http_request(callback=callback)
 
@@ -587,15 +587,7 @@ class Drive:
 
         except HttpError as error:
             print(f"An error occurred: {error}")
-            ids = None
-
-        who = []
-        if email:
-            who.append(email)
-        if domain:
-            who.append(domain)
-
-        self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{' and '.join(who)} {Fore.GREEN}to {Fore.RESET}{file_id}")
+            results = None
 
         return results
 
@@ -610,11 +602,10 @@ class Drive:
         if not permission_id and not email and not domain:
             raise ValueError(f"Please provide permission_id or email or domain or all")
 
-        who = []
-
         if permission_id:
             self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
-            who.append(permission_id)
+            self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
+
         if email or domain:
             permissions = self.list_permissions(file_id=file_id)
 
@@ -625,8 +616,7 @@ class Drive:
                 else:
                     permission_id = email_permission[0]
                     self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
-
-                    who.append(email)
+                    self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{email} {Fore.RED}from {Fore.RESET}{file_id}")
 
             if domain:
                 domain_permission = [p['id'] for p in permissions if p.get('domain') == str(domain).lower()]
@@ -635,10 +625,7 @@ class Drive:
                 else:
                     permission_id = domain_permission[0]
                     self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
-
-                    who.append(domain)
-        if who:
-            self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{', '.join(who)} {Fore.RED}from {Fore.RESET}{file_id}")
+                    self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{domain} {Fore.RED}from {Fore.RESET}{file_id}")
 
 
     def transfer_ownership(self, file_id, email):
