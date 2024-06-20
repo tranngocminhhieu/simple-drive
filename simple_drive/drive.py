@@ -164,22 +164,54 @@ class Drive:
 
 
     # Account infomation
-    def list_files(self, title_contains=None, owner_email=None, folder_id=None, custom_filter=None):
+    def list_files(self, title_contains=None, owner_email=None, writer_email=None, reader_email=None, folder_id=None, trashed=None, mime_type_contains=None, shared_with_me=None, visibility=None, custom_filter=None):
         '''
         List files related to this account
         :param title_contains: Filter by title
         :param owner_email: Filter by owner
+        :param writer_email: Filter by writer
+        :param reader_email: Filter by reader
         :param folder_id: Filter by folder
-        :param custom_filter: Your custom filter
+        :param trashed: Filter by trashed, True or False
+        :param mime_type_contains: Filter by mimeType, use MimeTypes class or visit https://developers.google.com/drive/api/guides/mime-types
+        :param shared_with_me: Filter by sharedWithMe, True or False
+        :param visibility: Filter by visibility, valid values: anyoneCanFind, anyoneWithLink, domainCanFind, domainWithLink, limited.
+        :param custom_filter: Your custom filter, visit https://developers.google.com/drive/api/guides/search-files, https://developers.google.com/drive/api/guides/ref-search-terms, https://developers.google.com/drive/api/guides/search-shareddrives
         :return: List of files
         '''
         filters = []
         if title_contains:
             filters.append(f"title contains '{title_contains}'")
+
         if owner_email:
             filters.append(f"'{owner_email}' in owners")
+
+        if writer_email:
+            filters.append(f"'{writer_email}' in writers")
+
+        if reader_email:
+            filters.append(f"'{reader_email}' in readers")
+
         if folder_id:
-            filters.append(f"'{folder_id}' in parents and trashed=false")
+            filters.append(f"'{folder_id}' in parents")
+
+        if trashed in [True, False]:
+            filters.append(f"trashed={str(trashed).lower()}")
+
+        if mime_type_contains:
+            # Filter not work with mimeType value
+            if isinstance(mime_type_contains, Enum):
+                mime_type_name = mime_type_contains.name
+            else:
+                mime_type_name = mime_type_contains
+            filters.append(f"mimeType contains '{mime_type_name}'")
+
+        if shared_with_me in [True, False]:
+            filters.append(f"sharedWithMe={str(shared_with_me).lower()}")
+
+        if visibility:
+            filters.append(f"visibility = '{visibility}'")
+
         if custom_filter:
             filters.append(custom_filter)
 
