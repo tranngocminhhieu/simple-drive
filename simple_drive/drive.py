@@ -290,7 +290,7 @@ class Drive:
                 done = False
                 while done is False:
                     status, done = downloader.next_chunk()
-                    print(f"Download {int(status.progress() * 100)}.")
+                    self.drive.print_if_verbose(f"Download {int(status.progress() * 100)}.")
 
                 if dest_directory and not get_value:
                     name = os.path.join(dest_directory, file_info.get('name'))
@@ -357,7 +357,7 @@ class Drive:
                 done = False
                 while done is False:
                     status, done = downloader.next_chunk()
-                    print(f"Download {int(status.progress() * 100)}.")
+                    self.drive.print_if_verbose(f"Download {int(status.progress() * 100)}.")
 
                 if dest_directory and not get_value:
                     name = os.path.join(dest_directory, f"{file_info.get('name')}.{format.lower()}")
@@ -394,14 +394,12 @@ class Drive:
             result = self.drive.service.files().update(fileId=file_id, body=body,
                                                        fields=self.default_file_fields).execute()
             if restore:
-                self.drive.print_if_verbose(
-                    f"{Fore.GREEN}Restored {Fore.RESET}{file_id}{Fore.GREEN} from trash{Fore.RESET}")
+                self.drive.print_if_verbose(f"{Fore.GREEN}Restored {Fore.RESET}{file_id}{Fore.GREEN} from trash{Fore.RESET}")
             else:
-                self.drive.print_if_verbose(
-                    f"{Fore.YELLOW}Moved {Fore.RESET}{file_id}{Fore.YELLOW} to trash{Fore.RESET}")
+                self.drive.print_if_verbose( f"{Fore.YELLOW}Moved {Fore.RESET}{file_id}{Fore.YELLOW} to trash{Fore.RESET}")
             return result
 
-        def restrict_content(self, file_id, read_only=False, owner_restricted=False, reason=None):
+        def restrict(self, file_id, read_only=False, owner_restricted=False, reason=None):
             '''
             Restrict the content of a file
             :param file_id: File ID
