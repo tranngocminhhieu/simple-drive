@@ -489,6 +489,25 @@ class Drive:
         return shortcut
 
 
+    def restrict_content(self, file_id, read_only=False, owner_restricted=False, reason=None):
+        '''
+        Restrict the content of a file
+        :param file_id: File ID
+        :param read_only: True or False
+        :param owner_restricted: Only the owner of the file can change the restriction status
+        :param reason: Optional
+        :return:
+        '''
+        content_restriction = {'readOnly': read_only, 'ownerRestricted': owner_restricted}
+        if reason:
+            content_restriction['reason'] = reason
+
+        result = self.service.files().update(fileId=file_id, body={'contentRestrictions' : [content_restriction]}, fields=f"{self.default_file_fields},contentRestrictions").execute();
+
+        self.print_if_verbose(f"{Fore.BLUE}Updated content restriction for {Fore.RESET}{file_id}")
+
+        return result
+
     class Permissions:
         def __init__(self, drive):
             self.drive = drive
