@@ -27,13 +27,11 @@ class Drive:
         # For other features
         self.service = build('drive', 'v3', credentials=auth.credentials)
 
-        # Default info result of service.files()
-        self.default_file_fields = 'id, name, mimeType, parents, webViewLink, owners'
-
         self.Files = self.Files(drive=self)
         self.Comments = self.Comments(drive=self)
         self.Permissions = self.Permissions(drive=self)
         self.Replies = self.Replies(drive=self)
+        self.Revisions = self.Revisions(drive=self)
 
     # Support
     def print_if_verbose(self, *args):
@@ -682,3 +680,18 @@ class Drive:
             :param reply_id: Reply ID
             '''
             self.drive.service.replies().delete(fileId=file_id, commentId=comment_id, replyId=reply_id).execute()
+
+
+    class Revisions:
+        def __init__(self, drive):
+            self.drive = drive
+
+        def list(self, file_id):
+            return self.drive.service.revisions().list(fileId=file_id, fields='revisions').execute()['revisions']
+
+        def get(self, file_id, revision_id):
+            return self.drive.service.revisions().get(fileId=file_id, revisionId=revision_id, fields='*').execute()
+
+        def delete(self, file_id, revision_id):
+            self.drive.service.revisions().delete(fileId=file_id, revisionId=revision_id).execute()
+            self.drive.print_if_verbose(f"{Fore.RED}Deleted revision {Fore.RESET}{revision_id}")
