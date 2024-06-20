@@ -481,7 +481,7 @@ class Drive:
         if dest_folder_id:
             shortcut_metadata['parents'] = [dest_folder_id]
 
-        shortcut = self.service.files().create(body=shortcut_metadata, fields='id,shortcutDetails').execute()
+        shortcut = self.service.files().create(body=shortcut_metadata, fields=f'{self.default_file_fields},shortcutDetails').execute()
 
         self.print_if_verbose(f"{Fore.GREEN}Created shortcut {Fore.RESET}{shortcut_name}")
         return shortcut
