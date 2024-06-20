@@ -5,6 +5,11 @@ from enum import Enum
 from colorama import Fore
 from googleapiclient.discovery import build
 from pydrive2.drive import GoogleDrive
+from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaIoBaseDownload
+import io
+
+from .constants import MimeTypes
 
 
 class Drive:
@@ -164,7 +169,7 @@ class Drive:
 
 
     # Account infomation
-    def list_files(self, title_contains=None, owner_email=None, writer_email=None, reader_email=None, folder_id=None, trashed=None, mime_type_contains=None, shared_with_me=None, visibility=None, custom_filter=None):
+    def _list_files_apiv2(self, title_contains=None, owner_email=None, writer_email=None, reader_email=None, folder_id=None, trashed=None, mime_type_contains=None, shared_with_me=None, visibility=None, custom_filter=None):
         '''
         List files related to this account
         :param title_contains: Filter by title
@@ -221,6 +226,192 @@ class Drive:
 
         return files
 
+
+    def list_files(self, name_contains=None, owner_email=None, writer_email=None, reader_email=None, folder_id=None, trashed=None, mime_type_contains=None, shared_with_me=None, visibility=None, custom_filter=None):
+        '''
+        List files related to this account
+        :param name_contains: Filter by title
+        :param owner_email: Filter by owner
+        :param writer_email: Filter by writer
+        :param reader_email: Filter by reader
+        :param folder_id: Filter by folder
+        :param trashed: Filter by trashed, True or False
+        :param mime_type_contains: Filter by mimeType, use MimeTypes class or visit https://developers.google.com/drive/api/guides/mime-types
+        :param shared_with_me: Filter by sharedWithMe, True or False
+        :param visibility: Filter by visibility, valid values: anyoneCanFind, anyoneWithLink, domainCanFind, domainWithLink, limited.
+        :param custom_filter: Your custom filter, visit https://developers.google.com/drive/api/guides/search-files, https://developers.google.com/drive/api/guides/ref-search-terms, https://developers.google.com/drive/api/guides/search-shareddrives
+        :return: List of files
+        '''
+        filters = []
+        if name_contains:
+            filters.append(f"name contains '{name_contains}'")
+
+        if owner_email:
+            filters.append(f"'{owner_email}' in owners")
+
+        if writer_email:
+            filters.append(f"'{writer_email}' in writers")
+
+        if reader_email:
+            filters.append(f"'{reader_email}' in readers")
+
+        if folder_id:
+            filters.append(f"'{folder_id}' in parents")
+
+        if trashed in [True, False]:
+            filters.append(f"trashed={str(trashed).lower()}")
+
+        if mime_type_contains:
+            # Filter not work with mimeType value
+            if isinstance(mime_type_contains, Enum):
+                mime_type_name = mime_type_contains.name
+            else:
+                mime_type_name = mime_type_contains
+            filters.append(f"mimeType contains '{mime_type_name}'")
+
+        if shared_with_me in [True, False]:
+            filters.append(f"sharedWithMe={str(shared_with_me).lower()}")
+
+        if visibility:
+            filters.append(f"visibility = '{visibility}'")
+
+        if custom_filter:
+            filters.append(custom_filter)
+
+        param = ' and '.join(filters) if len(filters) else None
+
+        # https://developers.google.com/drive/api/guides/search-files#python
+        try:
+            # create drive api client
+            files = []
+            page_token = None
+            while True:
+                response = (
+                    self.service.files()
+                    .list(
+                        q=param,
+                        spaces="drive",
+                        fields="nextPageToken, files(*)",
+                        pageToken=page_token,
+                    )
+                    .execute()
+                )
+                for file in response.get("files", []):
+                    # Process change
+                    self.print_if_verbose(f"Found file: {Fore.BLUE}{file.get('name')}{Fore.RESET}, {file.get('id')}")
+                files.extend(response.get("files", []))
+                page_token = response.get("nextPageToken", None)
+                if page_token is None:
+                    break
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            files = None
+
+        return files
+
+    def download(self, file_id, dest_directory=None, get_value=False):
+        '''
+        Download a file from the Drive
+        :param file_id: File ID
+        :param dest_directory: Destination directory
+        :param get_value: False to save the file, True to get the file value only
+        :return: file value when get_value is True
+        '''
+        file_info = self.get_file_info(file_id)
+
+        # https://developers.google.com/drive/api/guides/manage-downloads
+        try:
+            request = self.service.files().get_media(fileId=file_id)
+            file = io.BytesIO()
+            downloader = MediaIoBaseDownload(file, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
+                # print(f"Download {int(status.progress() * 100)}.")
+
+            if dest_directory and not get_value:
+                name = os.path.join(dest_directory, file_info.get('name'))
+            else:
+                name = file_info.get('name')
+
+            if not get_value:
+                with open(name, 'wb') as f:
+                    f.write(file.getvalue())
+
+            self.print_if_verbose(f"{Fore.GREEN}Downloaded {Fore.RESET}{name}")
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            file = None
+
+        if get_value:
+            return file.getvalue()
+
+    def export(self, file_id, format='default', dest_directory=None, get_value=False):
+        '''
+        Export the Google Workspace documents
+        :param file_id: File ID
+        :param format: Format of the exported file (xlsx, docx, pdf, pptx, json, csv, ...), defaults to 'default'. Read more: https://developers.google.com/drive/api/guides/ref-export-formats")
+        :param dest_directory: Destination directory
+        :param get_value: False to save the file, True to get the file value only
+        :return: file value when get_value is True
+        '''
+
+        # Prepare export mimeType and format (file mimeType is different with export mimeType)
+        file_info = self.get_file_info(file_id=file_id)
+        export_formats = {file_info['exportLinks'][v].split('=')[-1]:v for v in file_info['exportLinks']}
+        file_mime_type = file_info.get('mimeType')
+
+        if format.lower() not in export_formats and format != 'default':
+            raise ValueError(f"You can export {file_id} with formats: {'; '.join(export_formats)}, because it is {file_mime_type}. Read more: https://developers.google.com/drive/api/guides/ref-export-formats")
+
+        # https://developers.google.com/drive/api/guides/ref-export-formats
+        default_export_mime_types = {
+            # Documents
+            MimeTypes.DOCS.value: ('application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'docx'),
+            # Spreadsheets
+            MimeTypes.SHEETS.value: ('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'xlsx'),
+            # Presentations
+            MimeTypes.SLIDES.value: ('application/vnd.openxmlformats-officedocument.presentationml.presentation', '.pptx'),
+            # Drawings
+            MimeTypes.DRAWINGS.value: ('application/pdf', 'pdf'),
+            # Apps Script
+            MimeTypes.APPS_SCRIPT.value: ('application/vnd.google-apps.script+json', 'json')
+        }
+
+        if format == 'default':
+            export_mime_type, format = default_export_mime_types[file_mime_type]
+        else:
+            export_mime_type = export_formats[format]
+
+        # https://developers.google.com/drive/api/guides/manage-downloads
+        try:
+            request = self.service.files().export_media(fileId=file_id, mimeType=export_mime_type)
+            file = io.BytesIO()
+            downloader = MediaIoBaseDownload(file, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
+                # print(f"Download {int(status.progress() * 100)}.")
+
+            if dest_directory and not get_value:
+                name = os.path.join(dest_directory, f"{file_info.get('name')}.{format}")
+            else:
+                name = f"{file_info.get('name')}.{format}"
+
+            if not get_value:
+                with open(name, 'wb') as f:
+                    f.write(file.getvalue())
+
+            self.print_if_verbose(f"{Fore.GREEN}Exported {Fore.RESET}{name}")
+
+        except HttpError as error:
+            print(f"An error occurred: {error}")
+            file = None
+
+        if get_value:
+            return file.getvalue()
 
     def get_storage_quota(self):
         '''
