@@ -4,6 +4,7 @@
 - Add empty_trash feature
 - Add trash feature
 - Add create_shortcut feature
+- Add list_comments feature
 - Update list_files to API v3
 - Update add_permission: email, domain, or both
 - Update remove_permission: permission_id, email, domain, or all

@@ -30,6 +30,8 @@ class Drive:
         # Default info result of service.files()
         self.default_file_fields = 'id, name, mimeType, parents, webViewLink, owners'
 
+        self.Comments = self.Comments(drive=self)
+        self.Permissions = self.Permissions(drive=self)
 
     # Support
     def print_if_verbose(self, *args):
@@ -486,158 +488,188 @@ class Drive:
         self.print_if_verbose(f"{Fore.GREEN}Created shortcut {Fore.RESET}{shortcut_name}")
         return shortcut
 
-    # Permission
-    def list_permissions(self, file_id):
-        '''
-        Get a list of permissions of a file|folder
-        :param file_id: File|folder ID
-        :return: Permission info
-        '''
-        return self.service.permissions().list(fileId=file_id, fields='permissions').execute()['permissions']
 
+    class Permissions:
+        def __init__(self, drive):
+            self.drive = drive
 
-    # def _add_permission(self, file_id, email, role):
-    #     '''
-    #     Add permission to a file|folder
-    #     :param file_id: File|folder ID
-    #     :param email: Email address
-    #     :param role: Use constants.Roles or visit https://developers.google.com/drive/api/guides/ref-roles
-    #     :return: Permission info
-    #     '''
-    #
-    #     if isinstance(role, Enum):
-    #         role_value = role.value
-    #         role_name = role.name.capitalize()
-    #     else:
-    #         role_value = role.lower()
-    #         role_name = role.capitalize()
-    #
-    #     body = {'type': 'user', 'role': role_value, 'emailAddress': email}
-    #     result = self.service.permissions().create(fileId=file_id, body=body, fields='*').execute()
-    #
-    #     self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{email} {Fore.GREEN}to {Fore.RESET}{file_id}")
-    #
-    #     return result
+        def list(self, file_id):
+            '''
+            Get a list of permissions of a file|folder
+            :param file_id: File|folder ID
+            :return: Permission info
+            '''
+            return self.drive.service.permissions().list(fileId=file_id, fields='permissions').execute()['permissions']
 
-    def add_permission(self, file_id, role, email=None, domain=None):
-        '''
-        Add permission to a file|folder
-        :param file_id: File|folder ID
-        :param role: Use constants.Roles or visit https://developers.google.com/drive/api/guides/ref-roles
-        :param email: Email address
-        :param domain: Domain, e.g. google.com
-        :return: Permission info
-        '''
+        def add(self, file_id, role, email=None, domain=None):
+            '''
+            Add permission to a file|folder
+            :param file_id: File|folder ID
+            :param role: Use constants.Roles or visit https://developers.google.com/drive/api/guides/ref-roles
+            :param email: Email address
+            :param domain: Domain, e.g. google.com
+            :return: Permission info
+            '''
 
-        if not email and not domain:
-            raise ValueError('Please provide email address or domain or both')
+            if not email and not domain:
+                raise ValueError('Please provide email address or domain or both')
 
-        if isinstance(role, Enum):
-            role_value = role.value
-            role_name = role.name.capitalize()
-        else:
-            role_value = role.lower()
-            role_name = role.capitalize()
+            if isinstance(role, Enum):
+                role_value = role.value
+                role_name = role.name.capitalize()
+            else:
+                role_value = role.lower()
+                role_name = role.capitalize()
 
-        # https://developers.google.com/drive/api/guides/manage-sharing
-        try:
-            # create drive api client
-            results = []
+            # https://developers.google.com/drive/api/guides/manage-sharing
+            try:
+                # create drive api client
+                results = []
 
-            def callback(request_id, response, exception):
-                if exception:
-                    # Handle error
-                    print(exception)
-                else:
-                    results.append(response)
-                    self.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{response.get('emailAddress', response.get('domain'))} {Fore.GREEN}to {Fore.RESET}{file_id}")
+                def callback(request_id, response, exception):
+                    if exception:
+                        # Handle error
+                        print(exception)
+                    else:
+                        results.append(response)
+                        self.drive.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{response.get('emailAddress', response.get('domain'))} {Fore.GREEN}to {Fore.RESET}{file_id}")
 
-            batch = self.service.new_batch_http_request(callback=callback)
+                batch = self.drive.service.new_batch_http_request(callback=callback)
 
-            if email:
-                user_permission = {
-                    "type": "user",
-                    "role": role_value,
-                    "emailAddress": email,
-                }
-                batch.add(
-                    self.service.permissions().create(
-                        fileId=file_id,
-                        body=user_permission,
-                        fields="*",
+                if email:
+                    user_permission = {
+                        "type": "user",
+                        "role": role_value,
+                        "emailAddress": email,
+                    }
+                    batch.add(
+                        self.drive.service.permissions().create(
+                            fileId=file_id,
+                            body=user_permission,
+                            fields="*",
+                        )
                     )
-                )
 
-            if domain:
-                domain_permission = {
-                    "type": "domain",
-                    "role": role_value,
-                    "domain": domain,
-                }
+                if domain:
+                    domain_permission = {
+                        "type": "domain",
+                        "role": role_value,
+                        "domain": domain,
+                    }
 
-                batch.add(
-                    self.service.permissions().create(
-                        fileId=file_id,
-                        body=domain_permission,
-                        fields="*",
+                    batch.add(
+                        self.drive.service.permissions().create(
+                            fileId=file_id,
+                            body=domain_permission,
+                            fields="*",
+                        )
                     )
-                )
 
-            batch.execute()
+                batch.execute()
 
-        except HttpError as error:
-            print(f"An error occurred: {error}")
-            results = None
+            except HttpError as error:
+                print(f"An error occurred: {error}")
+                results = None
 
-        return results
+            return results
 
+        def remove(self, file_id, permission_id=None, email=None, domain=None):
+            '''
+            Remove a permission from a file|folder
+            :param file_id: File|folder ID
+            :param email: Email address
+            :param permission_id: Permission ID
+            '''
+            if not permission_id and not email and not domain:
+                raise ValueError(f"Please provide permission_id or email or domain or all")
 
-    def remove_permission(self, file_id, permission_id=None, email=None, domain=None):
-        '''
-        Remove a permission from a file|folder
-        :param file_id: File|folder ID
-        :param email: Email address
-        :param permission_id: Permission ID
-        '''
-        if not permission_id and not email and not domain:
-            raise ValueError(f"Please provide permission_id or email or domain or all")
+            if permission_id:
+                self.drive.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
+                self.drive.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
 
-        if permission_id:
-            self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
-            self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
+            if email or domain:
+                permissions = self.list(file_id=file_id)
 
-        if email or domain:
-            permissions = self.list_permissions(file_id=file_id)
+                if email:
+                    email_permission = [p['id'] for p in permissions if p.get('emailAddress') == str(email).lower()]
+                    if not email_permission:
+                        self.drive.print_if_verbose(f"{email}{Fore.YELLOW} does not exist in permission list{Fore.RESET}")
+                    else:
+                        permission_id = email_permission[0]
+                        self.drive.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
+                        self.drive.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{email} {Fore.RED}from {Fore.RESET}{file_id}")
 
-            if email:
-                email_permission = [p['id'] for p in permissions if p.get('emailAddress') == str(email).lower()]
-                if not email_permission:
-                    self.print_if_verbose(f"{email}{Fore.YELLOW} does not exist in permission list{Fore.RESET}")
-                else:
-                    permission_id = email_permission[0]
-                    self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
-                    self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{email} {Fore.RED}from {Fore.RESET}{file_id}")
-
-            if domain:
-                domain_permission = [p['id'] for p in permissions if p.get('domain') == str(domain).lower()]
-                if not domain_permission:
-                    self.print_if_verbose(f"{domain}{Fore.YELLOW} does not exist in permission list{Fore.RESET}")
-                else:
-                    permission_id = domain_permission[0]
-                    self.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
-                    self.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{domain} {Fore.RED}from {Fore.RESET}{file_id}")
+                if domain:
+                    domain_permission = [p['id'] for p in permissions if p.get('domain') == str(domain).lower()]
+                    if not domain_permission:
+                        self.drive.print_if_verbose(f"{domain}{Fore.YELLOW} does not exist in permission list{Fore.RESET}")
+                    else:
+                        permission_id = domain_permission[0]
+                        self.drive.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
+                        self.drive.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{domain} {Fore.RED}from {Fore.RESET}{file_id}")
 
 
-    def transfer_ownership(self, file_id, email):
-        '''
-        Transfer ownership of a file|folder to an email
-        :param file_id: File|folder ID
-        :param email: Email address
-        :return: Ownership info
-        '''
-        body = {'type': 'user', 'role': 'owner', 'emailAddress': email}
-        result = self.service.permissions().create(fileId=file_id, body=body, transferOwnership=True, fields='*').execute()
+        def transfer_ownership(self, file_id, email):
+            '''
+            Transfer ownership of a file|folder to an email
+            :param file_id: File|folder ID
+            :param email: Email address
+            :return: Ownership info
+            '''
+            body = {'type': 'user', 'role': 'owner', 'emailAddress': email}
+            result = self.drive.service.permissions().create(fileId=file_id, body=body, transferOwnership=True, fields='*').execute()
 
-        self.print_if_verbose(f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
+            self.drive.print_if_verbose(f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
 
-        return result
+            return result
+
+
+    class Comments:
+        def __init__(self, drive):
+            self.drive = drive
+        def list(self, file_id):
+            '''
+            List comments of a file
+            :param file_id: File ID
+            :return: List of comments
+            '''
+            return self.drive.service.comments().list(fileId=file_id, fields='comments').execute()['comments']
+
+        def delete(self, file_id, comment_id):
+            '''
+            Delete a comment
+            :param file_id:  File ID
+            :param comment_id: Comment ID
+            '''
+            self.drive.service.comments().delete(fileId=file_id, commentId=comment_id).execute()
+            self.drive.print_if_verbose(f"{Fore.RED}Deleted comment {Fore.RESET}{comment_id} in file {file_id}")
+
+        def create(self, file_id, content):
+            '''
+            Create a new comment
+            :param file_id: File ID
+            :param content: Comment content
+            :return:
+            '''
+            body = {
+                'content': content
+            }
+            result = self.drive.service.comments().create(fileId=file_id, body=body, fields='*').execute()
+
+            self.drive.print_if_verbose(f'{Fore.GREEN}Created comment: {Fore.RESET}"{content}"{Fore.GREEN} in file {Fore.RESET}{file_id}')
+
+            return result
+
+        def update(self, file_id, comment_id, content):
+            '''
+            Update a comment
+            :param file_id: File ID
+            :param comment_id: Comment ID
+            :param content: New comment content
+            :return: Comment info
+            '''
+            # resolved not work
+            body = {'content': content}
+            result = self.drive.service.comments().update(fileId=file_id, commentId=comment_id, body=body, fields='*').execute()
+            self.drive.print_if_verbose(f'{Fore.BLUE}Updated comment {Fore.RESET}{comment_id}')
+            return result
