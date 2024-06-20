@@ -1,7 +1,12 @@
 # 1.0.3
 - Add download feature
 - Add export feature
+- Add empty_trash feature
+- Add trash feature
+- Add create_shortcut feature
 - Update list_files to API v3
+- Update add_permission: email, domain, or both
+- Update remove_permission: permission_id, email, domain, or all
 
 # 1.0.2
 - Improve micro things
