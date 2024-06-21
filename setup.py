@@ -13,7 +13,7 @@ setup(
     author='Tran Ngoc Minh Hieu',
     author_email='tnmhieu@gmail.com',
     packages=['simple_drive'],
-    package_data={'simple_drive': ['*']},
+    package_data={'simple_drive': ['drive/*']},
     install_requires=[
         'colorama',
         'pydrive2',
