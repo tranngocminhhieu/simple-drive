@@ -50,8 +50,7 @@ class Permissions:
         result = self.drive.service.permissions().create(fileId=file_id, body=body, transferOwnership=True,
                                                          fields='*').execute()
 
-        self.drive.print_if_verbose(
-            f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
+        self.drive.print_if_verbose(f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
 
         return result
 
@@ -116,8 +115,7 @@ class Permissions:
         result = self.drive.service.permissions().update(fileId=file_id, permissionId=permission_id, body=body,
                                                          fields='*').execute()
 
-        self.drive.print_if_verbose(
-            f"{Fore.BLUE}Updated permission of {Fore.RESET}{email or domain or permission_id}{Fore.BLUE} in file {Fore.RESET}{file_id}{Fore.BLUE} to {Fore.RESET}{role_name}")
+        self.drive.print_if_verbose(f"{Fore.BLUE}Updated {Fore.RESET}{email or domain or permission_id}{Fore.BLUE}'s permission in file {Fore.RESET}{file_id}{Fore.BLUE} to {Fore.RESET}{role_name}")
 
         return result
 
@@ -157,5 +155,4 @@ class Permissions:
                 raise ValueError(f"Permission not found: {email or domain}")
 
         self.drive.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
-        self.drive.print_if_verbose(
-            f"{Fore.RED}Removed permission of {Fore.RESET}{email or domain or permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
+        self.drive.print_if_verbose(f"{Fore.RED}Removed {Fore.RESET}{email or domain or permission_id}{Fore.RED}'s permission from {Fore.RESET}{file_id}")

@@ -351,7 +351,7 @@ class Files:
         Empty the trash
         '''
         self.drive.service.files().emptyTrash().execute()
-        self.drive.print_if_verbose(f"{Fore.YELLOW}Already empty trash{Fore.RESET}")
+        self.drive.print_if_verbose(f"{Fore.YELLOW}Emptied the trash{Fore.RESET}")
 
     def trash(self, file_id, restore=False):
         '''

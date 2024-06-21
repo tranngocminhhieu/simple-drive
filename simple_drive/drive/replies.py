@@ -21,8 +21,7 @@ class Replies:
             truncated_content = content[:20] + '...'
         else:
             truncated_content = content
-        self.drive.print_if_verbose \
-            (f'{Fore.GREEN}Created a reply {Fore.RESET}"{truncated_content}"{Fore.GREEN} to comment {Fore.RESET}{comment_id}')
+        self.drive.print_if_verbose(f'{Fore.GREEN}Replied {Fore.RESET}"{truncated_content}"{Fore.GREEN} to comment {Fore.RESET}{comment_id}')
         return result
 
 
@@ -53,8 +52,7 @@ class Replies:
             truncated_content = content[:20] + '...'
         else:
             truncated_content = content
-        self.drive.print_if_verbose \
-            (f'{Fore.BLUE}Updated reply {Fore.RESET}{reply_id}{Fore.BLUE} to {Fore.RESET}"{truncated_content}"')
+        self.drive.print_if_verbose(f'{Fore.BLUE}Updated the content of reply {Fore.RESET}{reply_id}{Fore.BLUE} to {Fore.RESET}"{truncated_content}"')
         return result
 
 

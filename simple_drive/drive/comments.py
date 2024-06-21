@@ -19,8 +19,7 @@ class Comments:
             truncated_content = content[:20] + '...'
         else:
             truncated_content = content
-        self.drive.print_if_verbose(
-            f'{Fore.GREEN}Created a comment {Fore.RESET}"{truncated_content}"{Fore.GREEN} on file {Fore.RESET}{file_id}')
+        self.drive.print_if_verbose(f'{Fore.GREEN}Commented {Fore.RESET}"{truncated_content}"{Fore.GREEN} on file {Fore.RESET}{file_id}')
 
         return result
 
@@ -43,15 +42,13 @@ class Comments:
         '''
         # resolved not work
         body = {'content': content}
-        result = self.drive.service.comments().update(fileId=file_id, commentId=comment_id, body=body,
-                                                      fields='*').execute()
+        result = self.drive.service.comments().update(fileId=file_id, commentId=comment_id, body=body, fields='*').execute()
 
         if len(content) > 20:
             truncated_content = content[:20] + '...'
         else:
             truncated_content = content
-        self.drive.print_if_verbose(
-            f'{Fore.BLUE}Updated comment {Fore.RESET}{comment_id}{Fore.BLUE} to {Fore.RESET}"{truncated_content}"')
+        self.drive.print_if_verbose(f'{Fore.BLUE}Updated the content of comment {Fore.RESET}{comment_id}{Fore.BLUE} to {Fore.RESET}"{truncated_content}"')
         return result
 
     def list(self, file_id):
