@@ -115,7 +115,7 @@ class Drive:
             :return: Shortcut info
             '''
             if not name:
-                name = self.get_file_info(file_id=file_id).get('name')
+                name = self.get(file_id=file_id).get('name')
 
             shortcut_metadata = {
                 'Name': name,
@@ -210,7 +210,7 @@ class Drive:
             new_file = self.drive.service.files().copy(fileId=file_id, body=body,
                                                        fields=self.default_file_fields).execute()
 
-            self.drive.print_if_verbose(f"{Fore.GREEN}Copied {Fore.RESET}{current_name}{Fore.GREEN} to {Fore.RESET}{new_name}{f'{Fore.GREEN}in folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
+            self.drive.print_if_verbose(f"{Fore.GREEN}Copied {Fore.RESET}{current_name}{Fore.GREEN} to {Fore.RESET}{new_name}{f'{Fore.GREEN} in folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
 
             return new_file
 
@@ -229,7 +229,7 @@ class Drive:
             return result
 
 
-        def restrict(self, file_id, read_only=False, owner_restricted=False, reason=None):
+        def restrict(self, file_id, read_only=True, owner_restricted=False, reason=None):
             '''
             Restrict the content of a file
             :param file_id: File ID
@@ -302,7 +302,7 @@ class Drive:
             :param get_value: False to save the file, True to get the file value only
             :return: file value when get_value is True
             '''
-            file_info = self.get_file_info(file_id)
+            file_info = self.get(file_id)
 
             # https://developers.google.com/drive/api/guides/manage-downloads
             try:
@@ -344,7 +344,7 @@ class Drive:
             '''
 
             # Prepare export mimeType and format (file mimeType is different with export mimeType)
-            file_info = self.get_file_info(file_id=file_id)
+            file_info = self.get(file_id=file_id)
             export_formats = {file_info['exportLinks'][v].split('=')[-1]: v for v in file_info['exportLinks']}
             file_mime_type = file_info.get('mimeType')
 
@@ -510,6 +510,8 @@ class Drive:
 
                 if permission:
                     return permission[0]
+                else:
+                    raise ValueError(f"Permission not found: {email or domain}")
 
 
         def update(self, file_id, role, permission_id=None, email=None, domain=None):
@@ -539,6 +541,8 @@ class Drive:
 
                 if permission:
                     permission_id = permission[0]['id']
+                else:
+                    raise ValueError(f"Permission not found: {email or domain}")
 
             result = self.drive.service.permissions().update(fileId=file_id, permissionId=permission_id, body=body, fields='*').execute()
 
@@ -580,6 +584,8 @@ class Drive:
 
                 if permission:
                     permission_id = permission[0]['id']
+                else:
+                    raise ValueError(f"Permission not found: {email or domain}")
 
             self.drive.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
             self.drive.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{email or domain or permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
@@ -598,7 +604,11 @@ class Drive:
             body = {'content': content}
             result = self.drive.service.comments().create(fileId=file_id, body=body, fields='*').execute()
 
-            self.drive.print_if_verbose(f'{Fore.GREEN}Created comment {Fore.RESET}"{content}"{Fore.GREEN} in file {Fore.RESET}{file_id}')
+            if len(content) > 20:
+                truncated_content = content[:20] + '...'
+            else:
+                truncated_content = content
+            self.drive.print_if_verbose(f'{Fore.GREEN}Created a comment {Fore.RESET}"{truncated_content}"{Fore.GREEN} on file {Fore.RESET}{file_id}')
 
             return result
 
@@ -624,7 +634,12 @@ class Drive:
             # resolved not work
             body = {'content': content}
             result = self.drive.service.comments().update(fileId=file_id, commentId=comment_id, body=body, fields='*').execute()
-            self.drive.print_if_verbose(f'{Fore.BLUE}Updated comment {Fore.RESET}{comment_id}')
+
+            if len(content) > 20:
+                truncated_content = content[:20] + '...'
+            else:
+                truncated_content = content
+            self.drive.print_if_verbose(f'{Fore.BLUE}Updated comment {Fore.RESET}{comment_id}{Fore.BLUE} to {Fore.RESET}"{truncated_content}"')
             return result
 
 
@@ -644,7 +659,7 @@ class Drive:
             :param comment_id: Comment ID
             '''
             self.drive.service.comments().delete(fileId=file_id, commentId=comment_id).execute()
-            self.drive.print_if_verbose(f"{Fore.RED}Deleted comment {Fore.RESET}{comment_id} in file {file_id}")
+            self.drive.print_if_verbose(f"{Fore.RED}Deleted comment {Fore.RESET}{comment_id} on file {file_id}")
 
 
     class Replies:
@@ -662,6 +677,12 @@ class Drive:
             '''
             body = {'content': content}
             result = self.drive.service.replies().create(fileId=file_id, commentId=comment_id, body=body, fields='*').execute()
+
+            if len(content) > 20:
+                truncated_content = content[:20] + '...'
+            else:
+                truncated_content = content
+            self.drive.print_if_verbose(f'{Fore.GREEN}Created a reply {Fore.RESET}"{truncated_content}"{Fore.GREEN} to comment {Fore.RESET}{comment_id}')
             return result
 
 
@@ -687,6 +708,12 @@ class Drive:
             '''
             body = {'content': content}
             result = self.drive.service.replies().update(fileId=file_id, commentId=comment_id, replyId=reply_id, body=body, fields='*').execute()
+
+            if len(content) > 20:
+                truncated_content = content[:20] + '...'
+            else:
+                truncated_content = content
+            self.drive.print_if_verbose(f'{Fore.BLUE}Updated reply {Fore.RESET}{reply_id}{Fore.BLUE} to {Fore.RESET}"{truncated_content}"')
             return result
 
 
@@ -708,6 +735,7 @@ class Drive:
             :param reply_id: Reply ID
             '''
             self.drive.service.replies().delete(fileId=file_id, commentId=comment_id, replyId=reply_id).execute()
+            self.drive.print_if_verbose(f"{Fore.RED}Deleted reply {Fore.RESET}{reply_id} on file {file_id}")
 
 
     class Revisions:
