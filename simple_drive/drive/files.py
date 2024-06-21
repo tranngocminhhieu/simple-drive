@@ -73,8 +73,7 @@ class Files:
         shortcut = self.drive.service.files().create(body=shortcut_metadata,
                                                      fields=f'{self.default_file_fields},shortcutDetails').execute()
 
-        self.drive.print_if_verbose(
-            f"{Fore.GREEN}Created a shortcut of {Fore.RESET}{file_id}{Fore.GREEN} as {Fore.RESET}{name}")
+        self.drive.print_if_verbose(f"{Fore.GREEN}Created a shortcut of {Fore.RESET}{file_id}{Fore.GREEN} as {Fore.RESET}{name}")
         return shortcut
 
     def upload(self, file, dest_folder_id=None, rename=None):
@@ -224,7 +223,7 @@ class Files:
                 for file in response.get("files", []):
                     # Process change
                     self.drive.print_if_verbose(
-                        f"Found file: {Fore.BLUE}{file.get('name')}{Fore.RESET}, {file.get('id')}")
+                        f"Found file: {Fore.BLUE}{file.get('name')}{Fore.RESET} | {file.get('id')}")
                 files.extend(response.get("files", []))
                 page_token = response.get("nextPageToken", None)
                 if page_token is None:
@@ -244,7 +243,6 @@ class Files:
         :param get_value: False to save the file, True to get the file value only
         :return: file value when get_value is True
         '''
-        file_info = self.get(file_id)
 
         # https://developers.google.com/drive/api/guides/manage-downloads
         try:
@@ -256,23 +254,26 @@ class Files:
                 status, done = downloader.next_chunk()
                 self.drive.print_if_verbose(f"Download {int(status.progress() * 100)}.")
 
-            if dest_directory and not get_value:
-                name = os.path.join(dest_directory, file_info.get('name'))
-            else:
-                name = file_info.get('name')
-
             if not get_value:
+                file_info = self.get(file_id)
+
+                if dest_directory:
+                    name = os.path.join(dest_directory, file_info.get('name'))
+                else:
+                    name = file_info.get('name')
+
                 with open(name, 'wb') as f:
                     f.write(file.getvalue())
 
-            self.drive.print_if_verbose(f"{Fore.GREEN}Downloaded {Fore.RESET}{name}")
+                self.drive.print_if_verbose(f"{Fore.GREEN}Saved {Fore.RESET}{file_id}{Fore.GREEN} as {Fore.RESET}{name}")
+
+            else:
+                self.drive.print_if_verbose(f"{Fore.GREEN}Got value of {Fore.RESET}{file_id}")
+                return file.getvalue()
 
         except HttpError as error:
             print(f"An error occurred: {error}")
-            file = None
 
-        if get_value:
-            return file.getvalue()
 
     def export(self, file_id, format='default', dest_directory=None, get_value=False):
         '''
@@ -289,7 +290,8 @@ class Files:
         export_formats = {file_info['exportLinks'][v].split('=')[-1]: v for v in file_info['exportLinks']}
         file_mime_type = file_info.get('mimeType')
 
-        if format.lower() not in export_formats and format != 'default':
+        format = format.lower()
+        if format not in export_formats and format != 'default':
             raise ValueError(
                 f"You can export {file_id} with formats: {'; '.join(export_formats)}, because it is {file_mime_type}. Read more: https://developers.google.com/drive/api/guides/ref-export-formats")
 
@@ -323,23 +325,26 @@ class Files:
                 status, done = downloader.next_chunk()
                 self.drive.print_if_verbose(f"Download {int(status.progress() * 100)}.")
 
-            if dest_directory and not get_value:
-                name = os.path.join(dest_directory, f"{file_info.get('name')}.{format.lower()}")
-            else:
-                name = f"{file_info.get('name')}.{format.lower()}"
 
             if not get_value:
+                if dest_directory:
+                    name = os.path.join(dest_directory, f"{file_info.get('name')}.{format}")
+                else:
+                    name = f"{file_info.get('name')}.{format}"
+
                 with open(name, 'wb') as f:
                     f.write(file.getvalue())
 
-            self.drive.print_if_verbose(f"{Fore.GREEN}Exported {Fore.RESET}{name}")
+                self.drive.print_if_verbose(f"{Fore.GREEN}Saved {Fore.RESET}{file_id}{Fore.GREEN} as {Fore.RESET}{name}")
+
+            else:
+                self.drive.print_if_verbose(f"{Fore.GREEN}Got value of {Fore.RESET}{file_id}")
+                return file.getvalue()
+
 
         except HttpError as error:
             print(f"An error occurred: {error}")
-            file = None
 
-        if get_value:
-            return file.getvalue()
 
     def empty_trash(self):
         '''
