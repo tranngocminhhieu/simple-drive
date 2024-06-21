@@ -1,13 +1,13 @@
+import io
 import os
 import os.path
 from enum import Enum
 
 from colorama import Fore
 from googleapiclient.discovery import build
-from pydrive2.drive import GoogleDrive
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
-import io
+from pydrive2.drive import GoogleDrive
 
 from .constants import MimeTypes
 
@@ -32,6 +32,7 @@ class Drive:
         self.Permissions = self.Permissions(drive=self)
         self.Replies = self.Replies(drive=self)
         self.Revisions = self.Revisions(drive=self)
+
 
     # Support
     def print_if_verbose(self, *args):
@@ -61,15 +62,17 @@ class Drive:
 
         return quota
 
+
     def get_about(self):
         return self.service.about().get(fields="*").execute()
+
 
     class Files:
         def __init__(self, drive):
             self.drive = drive
-            self.default_file_fields = 'id, name, mimeType, parents, webViewLink, owners'
+            self.default_file_fields = 'id, name, mimeType, size, parents, webViewLink, owners'
 
-        # File interaction
+
         def create(self, name, mime_type, dest_folder_id=None):
             '''
             Create a file|folder
@@ -102,6 +105,7 @@ class Drive:
 
             return file
 
+
         def create_shortcut(self, file_id, name=None, dest_folder_id=None):
             '''
             Create a shortcut
@@ -129,14 +133,6 @@ class Drive:
             self.drive.print_if_verbose(f"{Fore.GREEN}Created a shortcut of {Fore.RESET}{file_id}{Fore.GREEN} as {Fore.RESET}{name}")
             return shortcut
 
-        def delete(self, file_id):
-            '''
-            Delete a file|folder
-            :param file_id: File|folder ID
-            '''
-            self.drive.service.files().delete(fileId=file_id).execute()
-            self.drive.print_if_verbose(f"{Fore.RED}Deleted {Fore.RESET}{file_id}")
-
 
         def upload(self, file, dest_folder_id=None, rename=None):
             '''
@@ -161,6 +157,18 @@ class Drive:
             self.drive.print_if_verbose(f"{Fore.GREEN}Uploaded {Fore.RESET}{title}{f'{Fore.GREEN} to folder {Fore.RESET}{dest_folder_id}' if dest_folder_id else ''}")
 
             return new_file
+
+
+        def get(self, file_id, fields='*'):
+            '''
+            Get a file|folder info
+            :param file_id: File|folder ID
+            :param fields: * is all fields
+            :return: File|folder info
+            '''
+            if isinstance(file_id, list):
+                fields = ', '.join(fields)
+            return self.drive.service.files().get(fileId=file_id, fields=fields).execute()
 
 
         def move(self, file_id, dest_folder_id):
@@ -206,6 +214,7 @@ class Drive:
 
             return new_file
 
+
         def rename(self, file_id, name):
             '''
             Rename a file|folder
@@ -219,14 +228,28 @@ class Drive:
             self.drive.print_if_verbose(f"{Fore.BLUE}Renamed {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{name}")
             return result
 
-        def get(self, file_id, fields='*'):
+
+        def restrict(self, file_id, read_only=False, owner_restricted=False, reason=None):
             '''
-            Get a file|folder info
-            :param file_id: File|folder ID
-            :param fields: * is all fields
-            :return: File|folder info
+            Restrict the content of a file
+            :param file_id: File ID
+            :param read_only: True or False
+            :param owner_restricted: Only the owner of the file can change the restriction status
+            :param reason: Optional
+            :return:
             '''
-            return self.drive.service.files().get(fileId=file_id, fields=fields).execute()
+            content_restriction = {'readOnly': read_only, 'ownerRestricted': owner_restricted}
+            if reason:
+                content_restriction['reason'] = reason
+
+            result = self.drive.service.files().update(fileId=file_id,
+                                                       body={'contentRestrictions': [content_restriction]},
+                                                       fields=f"{self.default_file_fields},contentRestrictions").execute();
+
+            self.drive.print_if_verbose(f"{Fore.BLUE}Updated content restriction for {Fore.RESET}{file_id}")
+
+            return result
+
 
         def list(self, *args, operator='and'):
             '''
@@ -270,6 +293,7 @@ class Drive:
 
             return files
 
+
         def download(self, file_id, dest_directory=None, get_value=False):
             '''
             Download a file from the Drive
@@ -307,6 +331,7 @@ class Drive:
 
             if get_value:
                 return file.getvalue()
+
 
         def export(self, file_id, format='default', dest_directory=None, get_value=False):
             '''
@@ -375,12 +400,14 @@ class Drive:
             if get_value:
                 return file.getvalue()
 
+
         def empty_trash(self):
             '''
             Empty the trash
             '''
             self.drive.service.files().emptyTrash().execute()
             self.drive.print_if_verbose(f"{Fore.YELLOW}Already empty trash{Fore.RESET}")
+
 
         def trash(self, file_id, restore=False):
             '''
@@ -397,39 +424,20 @@ class Drive:
                 self.drive.print_if_verbose( f"{Fore.YELLOW}Moved {Fore.RESET}{file_id}{Fore.YELLOW} to trash{Fore.RESET}")
             return result
 
-        def restrict(self, file_id, read_only=False, owner_restricted=False, reason=None):
+
+        def delete(self, file_id):
             '''
-            Restrict the content of a file
-            :param file_id: File ID
-            :param read_only: True or False
-            :param owner_restricted: Only the owner of the file can change the restriction status
-            :param reason: Optional
-            :return:
+            Delete a file|folder
+            :param file_id: File|folder ID
             '''
-            content_restriction = {'readOnly': read_only, 'ownerRestricted': owner_restricted}
-            if reason:
-                content_restriction['reason'] = reason
-
-            result = self.drive.service.files().update(fileId=file_id,
-                                                       body={'contentRestrictions': [content_restriction]},
-                                                       fields=f"{self.default_file_fields},contentRestrictions").execute();
-
-            self.drive.print_if_verbose(f"{Fore.BLUE}Updated content restriction for {Fore.RESET}{file_id}")
-
-            return result
+            self.drive.service.files().delete(fileId=file_id).execute()
+            self.drive.print_if_verbose(f"{Fore.RED}Deleted {Fore.RESET}{file_id}")
 
 
     class Permissions:
         def __init__(self, drive):
             self.drive = drive
 
-        def list(self, file_id):
-            '''
-            Get a list of permissions of a file|folder
-            :param file_id: File|folder ID
-            :return: Permission info
-            '''
-            return self.drive.service.permissions().list(fileId=file_id, fields='permissions').execute()['permissions']
 
         def add(self, file_id, role, email=None, domain=None):
             '''
@@ -440,7 +448,6 @@ class Drive:
             :param domain: Domain, e.g. google.com
             :return: Permission info
             '''
-
             provided_args = [email, domain]
             provided_count = sum(arg is not None for arg in provided_args)
             if provided_count != 1:
@@ -464,34 +471,6 @@ class Drive:
             return result
 
 
-        def remove(self, file_id, permission_id=None, email=None, domain=None):
-            '''
-            Remove a permission from a file|folder
-            :param file_id: File|folder ID
-            :param email: Email address
-            :param permission_id: Permission ID
-            '''
-            provided_args = [permission_id, email, domain]
-            provided_count = sum(arg is not None for arg in provided_args)
-            if provided_count != 1:
-                raise ValueError("Please provide exactly one of permission_id, email, or domain")
-
-            if permission_id:
-                pass
-            elif email or domain:
-                permissions = self.list(file_id=file_id)
-
-                if email:
-                    permission = [p for p in permissions if p.get('emailAddress')==email]
-                elif domain:
-                    permission = [p for p in permissions if p.get('domain') == domain]
-
-                if permission:
-                    permission_id = permission[0]['id']
-
-            self.drive.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
-            self.drive.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{email or domain or permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
-
         def transfer_ownership(self, file_id, email):
             '''
             Transfer ownership of a file|folder to an email
@@ -505,6 +484,7 @@ class Drive:
             self.drive.print_if_verbose(f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
 
             return result
+
 
         def get(self, file_id, permission_id=None, email=None, domain=None):
             '''
@@ -566,6 +546,45 @@ class Drive:
 
             return result
 
+
+        def list(self, file_id):
+            '''
+            Get a list of permissions of a file|folder
+            :param file_id: File|folder ID
+            :return: Permission info
+            '''
+            return self.drive.service.permissions().list(fileId=file_id, fields='permissions').execute()['permissions']
+
+
+        def remove(self, file_id, permission_id=None, email=None, domain=None):
+            '''
+            Remove a permission from a file|folder
+            :param file_id: File|folder ID
+            :param email: Email address
+            :param permission_id: Permission ID
+            '''
+            provided_args = [permission_id, email, domain]
+            provided_count = sum(arg is not None for arg in provided_args)
+            if provided_count != 1:
+                raise ValueError("Please provide exactly one of permission_id, email, or domain")
+
+            if permission_id:
+                pass
+            elif email or domain:
+                permissions = self.list(file_id=file_id)
+
+                if email:
+                    permission = [p for p in permissions if p.get('emailAddress')==email]
+                elif domain:
+                    permission = [p for p in permissions if p.get('domain') == domain]
+
+                if permission:
+                    permission_id = permission[0]['id']
+
+            self.drive.service.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
+            self.drive.print_if_verbose(f"{Fore.RED}Removed permission of {Fore.RESET}{email or domain or permission_id} {Fore.RED}from {Fore.RESET}{file_id}")
+
+
     class Comments:
         def __init__(self, drive):
             self.drive = drive
@@ -583,13 +602,6 @@ class Drive:
 
             return result
 
-        def list(self, file_id):
-            '''
-            List comments of a file
-            :param file_id: File ID
-            :return: List of comments
-            '''
-            return self.drive.service.comments().list(fileId=file_id, fields='comments').execute()['comments']
 
         def get(self, file_id, comment_id):
             '''
@@ -599,6 +611,7 @@ class Drive:
             :return: Comment info
             '''
             return self.drive.service.comments().get(fileId=file_id, commentId=comment_id, fields='*').execute()
+
 
         def update(self, file_id, comment_id, content):
             '''
@@ -614,6 +627,16 @@ class Drive:
             self.drive.print_if_verbose(f'{Fore.BLUE}Updated comment {Fore.RESET}{comment_id}')
             return result
 
+
+        def list(self, file_id):
+            '''
+            List comments of a file
+            :param file_id: File ID
+            :return: List of comments
+            '''
+            return self.drive.service.comments().list(fileId=file_id, fields='comments').execute()['comments']
+
+
         def delete(self, file_id, comment_id):
             '''
             Delete a comment
@@ -628,6 +651,7 @@ class Drive:
         def __init__(self, drive):
             self.drive = drive
 
+
         def create(self, file_id, comment_id, content):
             '''
             Create a reply
@@ -640,14 +664,17 @@ class Drive:
             result = self.drive.service.replies().create(fileId=file_id, commentId=comment_id, body=body, fields='*').execute()
             return result
 
-        def list(self, file_id, comment_id):
+
+        def get(self, file_id, comment_id, reply_id):
             '''
-            List replies
+            Get repy info
             :param file_id: File ID
             :param comment_id: Comment ID
-            :return: List of replies
+            :param reply_id: Reply ID
+            :return: Reply info
             '''
-            return self.drive.service.replies().list(fileId=file_id, commentId=comment_id, fields='replies').execute()['replies']
+            return self.drive.service.replies().get(fileId=file_id, commentId=comment_id, replyId=reply_id, fields='*').execute()
+
 
         def update(self, file_id, comment_id, reply_id, content):
             '''
@@ -662,15 +689,16 @@ class Drive:
             result = self.drive.service.replies().update(fileId=file_id, commentId=comment_id, replyId=reply_id, body=body, fields='*').execute()
             return result
 
-        def get(self, file_id, comment_id, reply_id):
+
+        def list(self, file_id, comment_id):
             '''
-            Get repy info
+            List replies
             :param file_id: File ID
             :param comment_id: Comment ID
-            :param reply_id: Reply ID
-            :return: Reply info
+            :return: List of replies
             '''
-            return self.drive.service.replies().get(fileId=file_id, commentId=comment_id, replyId=reply_id, fields='*').execute()
+            return self.drive.service.replies().list(fileId=file_id, commentId=comment_id, fields='replies').execute()['replies']
+
 
         def delete(self, file_id, comment_id, reply_id):
             '''
@@ -686,14 +714,6 @@ class Drive:
         def __init__(self, drive):
             self.drive = drive
 
-        def list(self, file_id):
-            '''
-            List all revisions
-            :param file_id: File ID
-            :return: List of revisions
-            '''
-            return self.drive.service.revisions().list(fileId=file_id, fields='revisions').execute()['revisions']
-
         def get(self, file_id, revision_id):
             '''
             Get revision info
@@ -702,6 +722,16 @@ class Drive:
             :return: Revision info
             '''
             return self.drive.service.revisions().get(fileId=file_id, revisionId=revision_id, fields='*').execute()
+
+
+        def list(self, file_id):
+            '''
+            List all revisions
+            :param file_id: File ID
+            :return: List of revisions
+            '''
+            return self.drive.service.revisions().list(fileId=file_id, fields='revisions').execute()['revisions']
+
 
         def delete(self, file_id, revision_id):
             '''
