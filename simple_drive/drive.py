@@ -21,11 +21,11 @@ class Drive:
         '''
         self.verbose = verbose
 
-        # For Upload and List files
+        # For Upload
         self.google_drive = GoogleDrive(auth)
 
         # For other features
-        self.service = build('drive', 'v3', credentials=auth.credentials)
+        self.service = build(serviceName='drive', version='v3', credentials=auth.credentials)
 
         self.Files = self.Files(drive=self)
         self.Comments = self.Comments(drive=self)
