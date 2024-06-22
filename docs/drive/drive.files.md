@@ -7,15 +7,15 @@ drive.Files.create(name, mime_type, dest_folder_id=None)
 
 Create a file or folder.
 
-### Parameters
+#### Parameters
 - **name**: File | folder name.
 - **mime_type**: Use MimeTypes or visit [https://developers.google.com/drive/api/guides/mime-types](https://developers.google.com/drive/api/guides/mime-types).
 - **dest_folder_id**: Destination folder.
 
-### Return
+#### Return
 File or folder info
 
-### Example
+#### Example
 ```python
 from simple_drive import MimeTypes
 
