@@ -16,20 +16,18 @@ class Auth:
         :return: auth_info
         '''
         instance = cls()
-        instance.auth_info.credentials = ServiceAccountCredentials.from_json_keyfile_dict(keyfile_dict=info,
-                                                                                          scopes=cls.SCOPES)
+        instance.auth_info.credentials = ServiceAccountCredentials.from_json_keyfile_dict(keyfile_dict=info, scopes=cls.SCOPES)
         return instance.auth_info
 
     @classmethod
-    def from_service_account_file(cls, file):
+    def from_service_account_file(cls, file='service_account.json'):
         '''
         Create auth info from a Google service account JSON file
         :param file: Google service account JSON file
         :return: auth_info
         '''
         instance = cls()
-        instance.auth_info.credentials = ServiceAccountCredentials.from_json_keyfile_name(filename=file,
-                                                                                          scopes=cls.SCOPES)
+        instance.auth_info.credentials = ServiceAccountCredentials.from_json_keyfile_name(filename=file, scopes=cls.SCOPES)
         return instance.auth_info
 
     @classmethod

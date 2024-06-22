@@ -6,6 +6,11 @@ class About:
 
 
     def get(self, fields="*"):
+        '''
+        Get the account info
+        :param fields: A list of fields, defaults to "*"
+        :return: Account info
+        '''
         if isinstance(fields, list):
             fields = ', '.join(fields)
         return self.drive.service.about().get(fields=fields).execute()
