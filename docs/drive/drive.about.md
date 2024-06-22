@@ -14,7 +14,10 @@ Storage quota info.
 ```python
 drive.About.get(fields="*")
 ```
-Get the account info
+Get the account info.
+
+#### Parameters
+- **fields**: A list of fields, defaults to `"*"`.
 
 #### Return
 Account info.
