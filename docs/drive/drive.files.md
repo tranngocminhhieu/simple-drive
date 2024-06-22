@@ -1,24 +1,26 @@
 # drive.Files
 
 ## create
-Create a file or folder.
-
-Use `MimeTypes` or visit https://developers.google.com/drive/api/guides/mime-types.
-
 ```python
-from simple_drive import MimeTypes
-
-# mime_type = MimeTypes.FOLDER
-# mime_type = mime_type.SHEETS
-# ...
 drive.Files.create(name, mime_type, dest_folder_id=None)
 ```
 
-    :param name: File|folder name
-    :param mime_type: Use MimeTypes or visit https://developers.google.com/drive/api/guides/mime-types
-    :param dest_folder_id: Destination folder
-    :return: File|folder info
+Create a file or folder.
 
+### Parameters
+- **name**: File | folder name.
+- **mime_type**: Use MimeTypes or visit [https://developers.google.com/drive/api/guides/mime-types](https://developers.google.com/drive/api/guides/mime-types).
+- **dest_folder_id**: Destination folder.
+
+### Return
+File or folder info
+
+### Example
+```python
+from simple_drive import MimeTypes
+
+drive.Files.create(name='The first folder', mime_type=MimeTypes.FOLDER, dest_folder_id=None)
+```
 
 ## create_shortcut
  Create a shortcut.

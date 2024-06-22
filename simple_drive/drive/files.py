@@ -18,10 +18,10 @@ class Files:
     def create(self, name, mime_type, dest_folder_id=None):
         '''
         Create a file or folder.
-        :param name: File|folder name
-        :param mime_type: Use MimeTypes or visit https://developers.google.com/drive/api/guides/mime-types
-        :param dest_folder_id: Destination folder
-        :return: File|folder info
+        :param name: File | folder name.
+        :param mime_type: Use MimeTypes or visit https://developers.google.com/drive/api/guides/mime-types.
+        :param dest_folder_id: Destination folder.
+        :return: File or folder info.
         '''
 
         if isinstance(mime_type, Enum):
