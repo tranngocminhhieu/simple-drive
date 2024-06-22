@@ -1,10 +1,12 @@
-# 2.0.0 (Big Update)
+# CHANGELOG
 
-## drive.About
+## 2.0.0 (Big Update)
+
+### drive.About
 - get
 - get_storage_quota
 
-## drive.Files
+### drive.Files
 - create
 - create_shortcut
 - upload
@@ -20,7 +22,7 @@
 - trash
 - delete
 
-## drive.Permissions
+### drive.Permissions
 - add
 - transfer_ownership
 - get
@@ -28,38 +30,38 @@
 - list
 - remove
 
-## drive.Comments
+### drive.Comments
 - create
 - get
 - update
 - list
 - delete
 
-## drive.Replies
+### drive.Replies
 - create
 - get
 - update
 - list
 - delete
 
-## Drive.Revisions
+### Drive.Revisions
 - get
 - list
 - delete
 
-# constants.py
+## constants.py
 - Add `SearchTerms` class
 
 
-# 1.0.2
+## 1.0.2
 - Improve micro things
 
-# 1.0.1
+## 1.0.1
 - `Drive().remove_permission` make sure email is lower case.
 - Clean code.
 - Human readable log for `get_storage_quota`
 
-# 1.0.0
+## 1.0.0
 Drive functions:
 - create
 - delete
