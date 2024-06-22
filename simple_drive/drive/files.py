@@ -17,9 +17,9 @@ class Files:
 
     def create(self, name, mime_type, dest_folder_id=None):
         '''
-        Create a file|folder
+        Create a file or folder.
         :param name: File|folder name
-        :param mime_type: Use constants.MimeTypes or visit https://developers.google.com/drive/api/guides/mime-types
+        :param mime_type: Use MimeTypes or visit https://developers.google.com/drive/api/guides/mime-types
         :param dest_folder_id: Destination folder
         :return: File|folder info
         '''
@@ -50,7 +50,7 @@ class Files:
 
     def create_shortcut(self, file_id, name=None, dest_folder_id=None):
         '''
-        Create a shortcut
+        Create a shortcut.
         :param file_id: File ID
         :param shortcut_name: Shortcut name
         :param dest_folder_id: Destination folder
@@ -78,7 +78,7 @@ class Files:
 
     def upload(self, file, dest_folder_id=None, rename=None):
         '''
-        Upload a file
+        Upload a file.
         :param file: Local file
         :param dest_folder_id: Destination folder
         :param rename: Rename file before uploading
@@ -103,7 +103,7 @@ class Files:
 
     def get(self, file_id, fields='*'):
         '''
-        Get a file|folder info
+        Get a file or folder info.
         :param file_id: File|folder ID
         :param fields: * is all fields
         :return: File|folder info
@@ -114,7 +114,7 @@ class Files:
 
     def move(self, file_id, dest_folder_id):
         '''
-        Move a file|folder
+        Move a file or folder.
         :param file_id: File|folder ID
         :param dest_folder_id: Destination folder
         :return: File|folder info
@@ -158,7 +158,7 @@ class Files:
 
     def rename(self, file_id, name):
         '''
-        Rename a file|folder
+        Rename a file or folder.
         :param file_id: File|folder ID
         :param name: Renamed name
         :return: File|folder info
@@ -171,12 +171,12 @@ class Files:
 
     def restrict(self, file_id, read_only=True, owner_restricted=False, reason=None):
         '''
-        Restrict the content of a file
+        Restrict the content of a file.
         :param file_id: File ID
         :param read_only: True or False
         :param owner_restricted: Only the owner of the file can change the restriction status
         :param reason: Optional
-        :return:
+        :return: File info
         '''
         content_restriction = {'readOnly': read_only, 'ownerRestricted': owner_restricted}
         if reason:
@@ -192,7 +192,7 @@ class Files:
 
     def list(self, *args, fields='*', operator='and'):
         '''
-        List files related to this account
+        List files related to this account.
         :param args: Use SearchTerms or visit https://developers.google.com/drive/api/guides/ref-search-terms
         :param operator: and, or
         :return: List of files
@@ -237,7 +237,7 @@ class Files:
 
     def download(self, file_id, dest_directory=None, get_value=False):
         '''
-        Download a file from the Drive
+        Download a file from the Drive.
         :param file_id: File ID
         :param dest_directory: Destination directory
         :param get_value: False to save the file, True to get the file value only
@@ -277,7 +277,7 @@ class Files:
 
     def export(self, file_id, format='default', dest_directory=None, get_value=False):
         '''
-        Export the Google Workspace documents
+        Export the Google Workspace documents.
         :param file_id: File ID
         :param format: Format of the exported file (xlsx, docx, pdf, pptx, json, csv, ...), defaults to 'default'. Read more: https://developers.google.com/drive/api/guides/ref-export-formats")
         :param dest_directory: Destination directory
@@ -348,14 +348,14 @@ class Files:
 
     def empty_trash(self):
         '''
-        Empty the trash
+        Empty the trash.
         '''
         self.drive.service.files().emptyTrash().execute()
         self.drive.print_if_verbose(f"{Fore.YELLOW}Emptied the trash{Fore.RESET}")
 
     def trash(self, file_id, restore=False):
         '''
-        Trash a file or restore a file from trash
+        Trash a file or restore a file from trash.
         :param file_id: File|Folder ID
         :param restore: True to restore, False to move to trash
         '''
@@ -371,7 +371,7 @@ class Files:
 
     def delete(self, file_id):
         '''
-        Delete a file|folder
+        Delete a file or folder.
         :param file_id: File|folder ID
         '''
         self.drive.service.files().delete(fileId=file_id).execute()
