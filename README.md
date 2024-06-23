@@ -10,6 +10,51 @@ This package is designed to make it easier for Python users to utilize the Googl
 
 I want to express my gratitude to the developer of [PyDrive2](https://github.com/iterative/PyDrive2). I used this package for the upload function and authorization with the local web server.
 
+## Main features
+
+### Files
+- create
+- create_shortcut
+- upload
+- get
+- move
+- copy
+- rename
+- restrict
+- list
+- download
+- export
+- empty_trash
+- trash
+- delete
+
+### Perissions
+- add
+- transfer_ownership
+- get
+- update
+- list
+- remove
+
+### Comments
+- create
+- get
+- update
+- list
+- delete
+
+### Replies
+- create
+- get
+- update
+- list
+- delete
+
+### Revisions
+- get
+- list
+- delete
+
 ## Installation
 ### Install from GitHub
 ```shell
