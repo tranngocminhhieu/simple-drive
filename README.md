@@ -6,9 +6,9 @@
 
 ![simple-drive.jpg](https://raw.githubusercontent.com/tranngocminhhieu/simple-drive/main/docs/simple-drive.jpg)
 
-This package will help Python users use Google Drive API more easily. Its syntax is concise and understandable. It was developed based on [Google Drive API documentation](https://developers.google.com/drive/api/).
+This package is designed to make it easier for Python users to utilize the Google Drive API. The syntax is concise and easy to understand, and it was developed based on the [Google Drive API documentation](https://developers.google.com/drive/api/).
 
-Thank you to the developer of [PyDrive2](https://github.com/iterative/PyDrive2). I used this package for the upload function and authorization with the local web server.
+I want to express my gratitude to the developer of [PyDrive2](https://github.com/iterative/PyDrive2). I used this package for the upload function and authorization with the local web server.
 
 ## Installation
 ### Install from GitHub
