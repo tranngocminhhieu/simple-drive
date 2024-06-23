@@ -20,6 +20,8 @@ pip install --upgrade simple-drive
 
 ##  User manual
 
-Read the [Documents](https://tranngocminhhieu.gitbook.io/simple-drive)
+Please read the [Documents](https://tranngocminhhieu.gitbook.io/simple-drive).
+
+---
 
 I welcome your contributions!
