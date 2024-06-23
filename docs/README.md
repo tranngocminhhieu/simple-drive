@@ -1,5 +1,7 @@
 # Installation
 
+![simple-drive.jpg](https://raw.githubusercontent.com/tranngocminhhieu/simple-drive/main/docs/simple-drive.jpg)
+
 ## Install from GitHub
 
 ```
