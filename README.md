@@ -4,6 +4,7 @@
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](https://github.com/tranngocminhhieu/simple-drive/issues)
 [![MIT](https://img.shields.io/github/license/tranngocminhhieu/simple-drive)](https://github.com/tranngocminhhieu/simple-drive/blob/main/LICENSE)
 
+![simple-drive.jpg](docs/simple-drive.jpg)
 
 Use Google Drive API in the simplest way
 

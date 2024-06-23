@@ -160,3 +160,4 @@ cython_debug/
 .idea/
 client_secrets.json
 service_account.json
+.DS_Store
