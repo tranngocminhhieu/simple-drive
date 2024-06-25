@@ -8,8 +8,6 @@
 
 This package is designed to make it easier for Python users to utilize the Google Drive API. The syntax is concise and easy to understand, and it was developed based on the [Google Drive API documentation](https://developers.google.com/drive/api/).
 
-I want to express my gratitude to the developer of [PyDrive2](https://github.com/iterative/PyDrive2). I used this package for the upload function and authorization with the local web server.
-
 ## Main features
 
 ### Files
