@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.0.2
+- Drive.Permissions: Fix wrong detect args (email, domain, anyone, ...).
+
+## 2.0.1
+- Drive.Permissions: Add anyone argument to functions.
+
 ## 2.0.0 (Big Update)
 
 ### drive.About
