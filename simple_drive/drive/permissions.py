@@ -6,6 +6,7 @@ from colorama import Fore
 class Permissions:
     def __init__(self, drive):
         self.drive = drive
+        self.email_address = None
 
     def add(self, file_id, role, email=None, domain=None, anyone=False):
         '''
@@ -51,8 +52,27 @@ class Permissions:
         :param email: Email address.
         :return: Ownership info.
         '''
-        body = {'type': 'user', 'role': 'owner', 'emailAddress': email}
-        result = self.drive.service.permissions().create(fileId=file_id, body=body, transferOwnership=True, fields='*').execute()
+
+        email = email.lower().strip()
+
+        if not self.email_address:
+            about = self.drive.service.about().get(fields='*').execute()
+            self.email_address = about['user']['emailAddress']
+
+        current_domain = self.email_address.split('@')[-1]
+        new_domain = email.split('@')[-1]
+
+        if current_domain != new_domain:
+            raise PermissionError(f"{email} is not in your organization ({current_domain}).")
+
+        if '@gmail.' not in email:
+            body = {'type': 'user', 'role': 'owner', 'emailAddress': email}
+            result = self.drive.service.permissions().create(fileId=file_id, body=body, transferOwnership=True, fields='*').execute()
+        else:
+            # https://stackoverflow.com/questions/78308635/unable-to-transfer-ownership-in-google-drive-v3-api-in-my-node-project
+            permission = self.add(file_id=file_id, email=email, role='writer')
+            body = {'role': 'writer', 'pendingOwner': True}
+            result = self.drive.service.permissions().update(fileId=file_id, permissionId=permission['id'], body=body, fields='*').execute()
 
         self.drive.print_if_verbose(f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
 

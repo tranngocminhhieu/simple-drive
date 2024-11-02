@@ -5,7 +5,7 @@ README = (Path(__file__).parent / "README.md").read_text()
 
 setup(
     name='simple-drive',
-    version='2.0.2',
+    version='2.0.4',
     description='Use Google Drive API in the simplest way',
     long_description=README,
     long_description_content_type="text/markdown",

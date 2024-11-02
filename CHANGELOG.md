@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.0.4
+- Drive.Files: Support list files in deep folders with param `deep_folder`.
+
+## 2.0.3
+- Drive.Permissions: Support transfer ownership with gmail.com.
+
 ## 2.0.2
 - Drive.Permissions: Fix wrong detect args (email, domain, anyone, ...).
 

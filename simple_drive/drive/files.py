@@ -190,7 +190,7 @@ class Files:
 
         return result
 
-    def list(self, *args, fields='*', operator='and'):
+    def list(self, *args, fields='*', operator='and', deep_folder=False):
         '''
         List files related to this account.
         :param args: Use SearchTerms or visit https://developers.google.com/drive/api/guides/ref-search-terms.
@@ -222,8 +222,12 @@ class Files:
                 )
                 for file in response.get("files", []):
                     # Process change
-                    self.drive.print_if_verbose(
-                        f"Found file: {Fore.BLUE}{file.get('name')}{Fore.RESET} | {file.get('id')}")
+                    self.drive.print_if_verbose(f"Found file: {Fore.BLUE}{file.get('name')}{Fore.RESET} | {file.get('id')}")
+
+                    # Support deep
+                    if deep_folder and file['mimeType'] == 'application/vnd.google-apps.folder':
+                        files.extend(self.list(f"'{file['id']}' in parents", deep_folder=True))
+
                 files.extend(response.get("files", []))
                 page_token = response.get("nextPageToken", None)
                 if page_token is None:
