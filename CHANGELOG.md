@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.8
+- Support withdrawn pendingOwner when use `drive.Permissions.update()` with `role=Roles.EDITOR`
+
 ## 2.0.7
 - Use `from colorama import just_fix_windows_console` to fix color in Windows CMD.
 

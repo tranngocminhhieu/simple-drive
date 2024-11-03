@@ -145,6 +145,9 @@ class Permissions:
             role_name = role.capitalize()
 
         body = {'role': role_value}
+        # Support withdrawn pendingOwner for Gmail
+        if role_value == 'writer':
+            body['pendingOwner'] = False
 
         if permission_id:
             pass
