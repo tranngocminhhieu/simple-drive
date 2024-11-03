@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.7
+- Use `from colorama import just_fix_windows_console` to fix color in Windows CMD.
+
 ## 2.0.6
 - Improve drive.Files.list(): Force `mimeType` in `fields` if `deep_folder=False`, print look better.
 

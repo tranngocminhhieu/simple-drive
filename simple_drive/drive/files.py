@@ -232,7 +232,7 @@ class Files:
 
                     # Support deep
                     if deep_folder and file['mimeType'] == 'application/vnd.google-apps.folder':
-                        files.extend(self.list(f"'{file['id']}' in parents", deep_folder=True))
+                        files.extend(self.list(f"'{file['id']}' in parents", deep_folder=deep_folder))
 
                 files.extend(response.get("files", []))
                 page_token = response.get("nextPageToken", None)
