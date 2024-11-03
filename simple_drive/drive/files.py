@@ -203,7 +203,11 @@ class Files:
         param = f" {operator} ".join(filters) if len(filters) else None
 
         if isinstance(fields, list):
-            fields = ', '.join(fields)
+            fields = ','.join(fields)
+
+        if deep_folder and 'mimeType' not in fields:
+            fields += ",mimeType"
+
 
         # https://developers.google.com/drive/api/guides/search-files#python
         try:
@@ -223,7 +227,7 @@ class Files:
                 )
                 for file in response.get("files", []):
                     # Process change
-                    self.drive.print_if_verbose(f"Found file: {Fore.BLUE}{file.get('name')}{Fore.RESET} | {file.get('id')}")
+                    self.drive.print_if_verbose(f"{Fore.BLUE}Found file: {Fore.RESET}{file.get('name')}" + (f" {Fore.BLUE}|{Fore.RESET} {file.get('id')}" if file.get('id') else ""))
 
                     # Support deep
                     if deep_folder and file['mimeType'] == 'application/vnd.google-apps.folder':

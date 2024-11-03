@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.6
+- Improve drive.Files.list(): Force `mimeType` in `fields` if `deep_folder=False`, print look better.
+
 ## 2.0.5
 - Improve code in Drive.Permissions.
 
