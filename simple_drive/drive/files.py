@@ -227,7 +227,11 @@ class Files:
                 )
                 for file in response.get("files", []):
                     # Process change
-                    self.drive.print_if_verbose(f"{Fore.BLUE}Found file: {Fore.RESET}{file.get('name')}" + (f" {Fore.BLUE}|{Fore.RESET} {file.get('id')}" if file.get('id') else ""))
+                    if file.get('id'):
+                        # Avoid print Fore code in Windows
+                        self.drive.print_if_verbose(f"{Fore.BLUE}Found file: {Fore.RESET}{file.get('name')} {Fore.BLUE}|{Fore.RESET} {file.get('id')}")
+                    else:
+                        self.drive.print_if_verbose(f"{Fore.BLUE}Found file: {Fore.RESET}{file.get('name')}")
 
                     # Support deep
                     if deep_folder and file['mimeType'] == 'application/vnd.google-apps.folder':
