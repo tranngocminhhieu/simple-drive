@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.5
+- Improve code in Drive.Permissions.
+
 ## 2.0.4
 - Drive.Files: Support list files in deep folders with param `deep_folder`.
 

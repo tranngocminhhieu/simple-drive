@@ -195,6 +195,7 @@ class Files:
         List files related to this account.
         :param args: Use SearchTerms or visit https://developers.google.com/drive/api/guides/ref-search-terms.
         :param operator: and, or.
+        :param deep_folder: If true, recursively search for folders.
         :return: List of files.
         '''
 

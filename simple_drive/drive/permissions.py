@@ -1,3 +1,4 @@
+import time
 from enum import Enum
 
 from colorama import Fore
@@ -41,8 +42,7 @@ class Permissions:
 
         result = self.drive.service.permissions().create(fileId=file_id, body=body, fields="*").execute()
 
-        self.drive.print_if_verbose(
-            f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{email or domain} {Fore.GREEN}to {Fore.RESET}{file_id}")
+        self.drive.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{email or domain} {Fore.GREEN}to {Fore.RESET}{file_id}")
         return result
 
     def transfer_ownership(self, file_id, email):
@@ -68,13 +68,21 @@ class Permissions:
         if '@gmail.' not in email:
             body = {'type': 'user', 'role': 'owner', 'emailAddress': email}
             result = self.drive.service.permissions().create(fileId=file_id, body=body, transferOwnership=True, fields='*').execute()
+            self.drive.print_if_verbose(f"{Fore.BLUE}Transferred Ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
         else:
-            # https://stackoverflow.com/questions/78308635/unable-to-transfer-ownership-in-google-drive-v3-api-in-my-node-project
-            permission = self.add(file_id=file_id, email=email, role='writer')
-            body = {'role': 'writer', 'pendingOwner': True}
-            result = self.drive.service.permissions().update(fileId=file_id, permissionId=permission['id'], body=body, fields='*').execute()
+            # https://developers.google.com/drive/api/guides/manage-sharing?hl=vi#transfer-consumer-account
+            # pendingOwner does not work as the docs, it maybe a bug, hope it will be fixed in the future.
+            body = {"type": "user", "role": 'writer', "emailAddress": email, 'pendingOwner': True}
+            permission = self.drive.service.permissions().create(fileId=file_id, body=body, fields="*").execute()
+            if not permission.get('pendingOwner'):
+                # https://stackoverflow.com/questions/78308635/unable-to-transfer-ownership-in-google-drive-v3-api-in-my-node-project
+                # pendingOwner will works in update command, but the new owner will not receive any notification. Fortunately, the create command above will send a notification about sharing file.
+                body = {'role': 'writer', 'pendingOwner': True}
+                result = self.drive.service.permissions().update(fileId=file_id, permissionId=permission['id'], body=body, fields='*').execute()
+            else:
+                result = permission
 
-        self.drive.print_if_verbose(f"{Fore.BLUE}Transferred ownership of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
+            self.drive.print_if_verbose(f"{Fore.BLUE}Sent Ownership Transfer Invitation of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
 
         return result
 
@@ -155,8 +163,7 @@ class Permissions:
             else:
                 raise ValueError(f"Permission not found: {email or domain}")
 
-        result = self.drive.service.permissions().update(fileId=file_id, permissionId=permission_id, body=body,
-                                                         fields='*').execute()
+        result = self.drive.service.permissions().update(fileId=file_id, permissionId=permission_id, body=body, fields='*').execute()
 
         self.drive.print_if_verbose(f"{Fore.BLUE}Updated {Fore.RESET}{email or domain or permission_id}{Fore.BLUE}'s permission in file {Fore.RESET}{file_id}{Fore.BLUE} to {Fore.RESET}{role_name}")
 
