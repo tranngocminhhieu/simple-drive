@@ -1,4 +1,3 @@
-from colorama import Fore
 from googleapiclient.discovery import build
 from pydrive2.drive import GoogleDrive
 
