@@ -56,7 +56,7 @@ drive.Permissions.transfer_ownership(file_id='AbcFileId', email='her@domain.com'
 
 ## pending\_owner
 
-```
+```python
 drive.Permissions.pending_owner(file_id, accept=True)
 ```
 
@@ -69,7 +69,7 @@ Accept or decline a pending owner invitation. Support Gmail only.
 
 #### Example
 
-```
+```python
 drive.Permissions.pending_owner(file_id='AbcFileId', accept=True)
 ```
 
