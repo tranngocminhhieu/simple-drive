@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.0.9
+- Add new feature: `Drive.Permissions.pending_owner(file_id, accept=True)`.
+
 ## 2.0.8
 - Support withdrawn pendingOwner when use `drive.Permissions.update()` with `role=Roles.EDITOR`
 

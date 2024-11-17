@@ -45,12 +45,13 @@ class Permissions:
         self.drive.print_if_verbose(f"{Fore.GREEN}Added {Fore.RESET}{role_name} {Fore.GREEN}permission for {Fore.RESET}{email or domain} {Fore.GREEN}to {Fore.RESET}{file_id}")
         return result
 
+
     def transfer_ownership(self, file_id, email):
         '''
         Transfer ownership of a file or folder to an email.
         :param file_id: File | folder ID.
         :param email: Email address.
-        :return: Ownership info.
+        :return: Permission info.
         '''
 
         email = email.lower().strip()
@@ -85,6 +86,39 @@ class Permissions:
             self.drive.print_if_verbose(f"{Fore.BLUE}Sent Ownership Transfer Invitation of {Fore.RESET}{file_id} {Fore.BLUE}to {Fore.RESET}{email}")
 
         return result
+
+
+    def pending_owner(self, file_id, accept=True):
+        '''
+        Accept or decline a pending owner invitation. Support Gmail only.
+        :param file_id: File | folder ID.
+        :param accept: True to accept, False to decline.
+        :return: Permission info.
+        '''
+        if not self.email_address:
+            about = self.drive.service.about().get(fields='*').execute()
+            self.email_address = about['user']['emailAddress']
+
+        if '@gmail.' not in self.email_address:
+            current_domain = self.email_address.split('@')[-1]
+            raise PermissionError(f"Pending Owner only supports Gmail accounts. Your organization is {current_domain}.")
+
+        permission = self.get(file_id=file_id, email=self.email_address)
+
+        if not permission.get('pendingOwner'):
+            raise PermissionError(f"You are not pending owner.")
+
+        elif accept:
+            body = {'type': 'user', 'role': 'owner', 'emailAddress': self.email_address}
+            permission = self.drive.service.permissions().create(fileId=file_id, body=body, transferOwnership=True, fields="*").execute()
+            self.drive.print_if_verbose(f"{Fore.GREEN}Accepted pending owner of {Fore.RESET}{file_id}")
+        elif not accept:
+            body = {'role': 'writer' ,'pendingOwner': False}
+            permission = self.drive.service.permissions().update(fileId=file_id, permissionId=permission['id'], body=body,fields='*').execute()
+            self.drive.print_if_verbose(f"{Fore.RED}Declined pending owner of {Fore.RESET}{file_id}")
+        return permission
+
+
 
     def get(self, file_id, permission_id=None, email=None, domain=None, anyone=False):
         '''
